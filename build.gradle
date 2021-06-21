@@ -1,0 +1,51 @@
+plugins {
+    id("org.springframework.boot") version "2.4.5"
+    id("io.spring.dependency-management") version "1.0.11.RELEASE"
+    id("org.jetbrains.kotlin.jvm") version "1.4.32"
+    id("org.jetbrains.kotlin.plugin.spring") version "1.4.32"
+}
+
+group = "dzt.studio"
+version = "0.0.1-incubation"
+java.sourceCompatibility = JavaVersion.VERSION_11
+
+repositories {
+    mavenLocal()
+    maven { url 'https://maven.aliyun.com/repository/central' }
+    mavenCentral()
+}
+
+dependencies {
+    implementation("org.springframework.boot:spring-boot-starter-web")
+    implementation ("org.springframework.boot:spring-boot-starter-security")
+    implementation("org.mybatis.spring.boot:mybatis-spring-boot-starter:2.1.1")
+    implementation("org.jetbrains.kotlin:kotlin-reflect")
+    implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
+    implementation("org.apache.tomcat.embed:tomcat-embed-core")
+    implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
+    implementation("com.alibaba:fastjson:1.2.75")
+    implementation("io.jsonwebtoken:jjwt:0.9.1")
+    implementation("javax.validation:validation-api:2.0.1.Final")
+    implementation("org.apache.flink:flink-table-api-java:${flinkVersion}")
+    implementation("org.apache.flink:flink-table-common:${flinkVersion}")
+    implementation("org.apache.flink:flink-table-planner-blink_${scalaBinaryVersion}:${flinkVersion}")
+    implementation("ch.ethz.ganymed:ganymed-ssh2:262")
+    implementation("org.postgresql:postgresql")
+    implementation("javax.xml.bind:jaxb-api:2.3.1")
+    implementation("com.jcraft:jsch:0.1.54")
+    implementation("com.github.pagehelper:pagehelper-spring-boot-starter:1.2.5")
+    testImplementation("org.springframework.boot:spring-boot-starter-test")
+}
+
+tasks {
+    compileKotlin {
+        kotlinOptions {
+            jvmTarget = "11"
+        }
+    }
+    compileTestKotlin {
+        kotlinOptions {
+            jvmTarget = "11"
+        }
+    }
+}

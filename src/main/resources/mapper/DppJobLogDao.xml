@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="dzt.studio.dppservice.dao.job.DppJobLogDao">
+  <resultMap id="BaseResultMap" type="dzt.studio.dppservice.domain.job.DppJobLog">
+    <id column="job_id" jdbcType="VARCHAR" property="jobId" />
+    <result column="log_info" jdbcType="VARCHAR" property="logInfo" />
+  </resultMap>
+  <sql id="Base_Column_List">
+    job_id, log_info
+  </sql>
+  <select id="selectByPrimaryKey" parameterType="java.lang.String" resultMap="BaseResultMap">
+    select 
+    <include refid="Base_Column_List" />
+    from "dpp_job_log"
+    where job_id = #{jobId,jdbcType=VARCHAR}
+  </select>
+  <delete id="deleteByPrimaryKey" parameterType="java.lang.String">
+    delete from "dpp_job_log"
+    where job_id = #{jobId,jdbcType=VARCHAR}
+  </delete>
+  <insert id="insert" keyColumn="job_id" keyProperty="jobId" parameterType="dzt.studio.dppservice.domain.job.DppJobLog" useGeneratedKeys="true">
+    insert into "dpp_job_log" (log_info)
+    values (#{logInfo,jdbcType=VARCHAR})
+  </insert>
+  <insert id="upsert" keyColumn="job_id" keyProperty="jobId" parameterType="dzt.studio.dppservice.domain.job.DppJobLog"
+          useGeneratedKeys="true">
+    insert into "dpp_job_log" (job_id,log_info)
+    values (#{jobId,jdbcType=VARCHAR},#{logInfo,jdbcType=VARCHAR})
+    ON CONFLICT(job_id) do update set log_info = EXCLUDED.log_info
+  </insert>
+  <insert id="insertSelective" keyColumn="job_id" keyProperty="jobId" parameterType="dzt.studio.dppservice.domain.job.DppJobLog" useGeneratedKeys="true">
+    insert into "dpp_job_log"
+    <trim prefix="(" suffix=")" suffixOverrides=",">
+      <if test="logInfo != null">
+        log_info,
+      </if>
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides=",">
+      <if test="logInfo != null">
+        #{logInfo,jdbcType=VARCHAR},
+      </if>
+    </trim>
+  </insert>
+  <update id="updateByPrimaryKeySelective" parameterType="dzt.studio.dppservice.domain.job.DppJobLog">
+    update "dpp_job_log"
+    <set>
+      <if test="logInfo != null">
+        log_info = #{logInfo,jdbcType=VARCHAR},
+      </if>
+    </set>
+    where job_id = #{jobId,jdbcType=VARCHAR}
+  </update>
+  <update id="updateByPrimaryKey" parameterType="dzt.studio.dppservice.domain.job.DppJobLog">
+    update "dpp_job_log"
+    set log_info = #{logInfo,jdbcType=VARCHAR}
+    where job_id = #{jobId,jdbcType=VARCHAR}
+  </update>
+</mapper>

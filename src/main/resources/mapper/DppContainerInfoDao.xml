@@ -1,0 +1,123 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="dzt.studio.dppservice.dao.job.DppContainerInfoDao">
+    <resultMap id="BaseResultMap" type="dzt.studio.dppservice.domain.job.DppContainerInfo">
+        <id column="id" jdbcType="VARCHAR" property="id"/>
+        <result column="container_id" jdbcType="VARCHAR" property="containerId"/>
+        <result column="container_name" jdbcType="VARCHAR" property="containerName"/>
+        <result column="container_url" jdbcType="VARCHAR" property="containerUrl"/>
+        <result column="container_msg" jdbcType="VARCHAR" property="containerMsg"/>
+        <result column="container_version" jdbcType="VARCHAR" property="containerVersion"/>
+    </resultMap>
+    <sql id="Base_Column_List">
+        id, container_id, container_name, container_url, container_msg, container_version
+    </sql>
+    <select id="selectByPrimaryKey" parameterType="java.lang.String" resultMap="BaseResultMap">
+        select
+        <include refid="Base_Column_List"/>
+        from "dpp_container_info"
+        where id = #{id,jdbcType=VARCHAR}
+    </select>
+    <select id="selectAll" parameterType="java.lang.String" resultMap="BaseResultMap">
+        select
+        <include refid="Base_Column_List"/>
+        from "dpp_container_info"
+    </select>
+    <delete id="deleteByPrimaryKey" parameterType="java.lang.String">
+        delete
+        from "dpp_container_info"
+        where id = #{id,jdbcType=VARCHAR}
+    </delete>
+    <insert id="insert" keyColumn="id" keyProperty="id"
+            parameterType="dzt.studio.dppservice.domain.job.DppContainerInfo" useGeneratedKeys="true">
+        insert into "dpp_container_info" (id,container_id, container_name, container_url,
+                                          container_msg, container_version)
+        values (#{id,jdbcType=VARCHAR},#{containerId,jdbcType=VARCHAR}, #{containerName,jdbcType=VARCHAR}, #{containerUrl,jdbcType=VARCHAR},
+                #{containerMsg,jdbcType=VARCHAR}, #{containerVersion,jdbcType=VARCHAR})
+    </insert>
+    <insert id="insertSelective" keyColumn="id" keyProperty="id"
+            parameterType="dzt.studio.dppservice.domain.job.DppContainerInfo" useGeneratedKeys="true">
+        insert into "dpp_container_info"
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="containerId != null">
+                container_id,
+            </if>
+            <if test="containerName != null">
+                container_name,
+            </if>
+            <if test="containerUrl != null">
+                container_url,
+            </if>
+            <if test="containerMsg != null">
+                container_msg,
+            </if>
+            <if test="containerVersion != null">
+                container_version,
+            </if>
+        </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="containerId != null">
+                #{containerId,jdbcType=VARCHAR},
+            </if>
+            <if test="containerName != null">
+                #{containerName,jdbcType=VARCHAR},
+            </if>
+            <if test="containerUrl != null">
+                #{containerUrl,jdbcType=VARCHAR},
+            </if>
+            <if test="containerMsg != null">
+                #{containerMsg,jdbcType=VARCHAR},
+            </if>
+            <if test="containerVersion != null">
+                #{containerVersion,jdbcType=VARCHAR},
+            </if>
+        </trim>
+    </insert>
+    <update id="updateByPrimaryKeySelective" parameterType="dzt.studio.dppservice.domain.job.DppContainerInfo">
+        update "dpp_container_info"
+        <set>
+            <if test="containerId != null">
+                container_id = #{containerId,jdbcType=VARCHAR},
+            </if>
+            <if test="containerName != null">
+                container_name = #{containerName,jdbcType=VARCHAR},
+            </if>
+            <if test="containerUrl != null">
+                container_url = #{containerUrl,jdbcType=VARCHAR},
+            </if>
+            <if test="containerMsg != null">
+                container_msg = #{containerMsg,jdbcType=VARCHAR},
+            </if>
+            <if test="containerVersion != null">
+                container_version = #{containerVersion,jdbcType=VARCHAR},
+            </if>
+        </set>
+        where id = #{id,jdbcType=VARCHAR}
+    </update>
+    <update id="updateByPrimaryKey" parameterType="dzt.studio.dppservice.domain.job.DppContainerInfo">
+        update "dpp_container_info"
+        set container_id      = #{containerId,jdbcType=VARCHAR},
+            container_name    = #{containerName,jdbcType=VARCHAR},
+            container_url     = #{containerUrl,jdbcType=VARCHAR},
+            container_msg     = #{containerMsg,jdbcType=VARCHAR},
+            container_version = #{containerVersion,jdbcType=VARCHAR}
+        where id = #{id,jdbcType=VARCHAR}
+    </update>
+    <resultMap id="ContainerJobInfoResultMap" type="dzt.studio.dppservice.domain.job.ContainerJobInfo">
+        <result column="container_url" jdbcType="VARCHAR" property="containerUrl" />
+        <result column="app_id" jdbcType="VARCHAR" property="appId" />
+        <result column="id" jdbcType="VARCHAR" property="jobId" />
+    </resultMap>
+    <select id="getJobIdWithUrl" resultMap="ContainerJobInfoResultMap">
+        select dci.container_url as container_url, djl.app_id as app_id, djl.job_status as job_status,djl.id as id
+        from dpp_container_info dci
+                 LEFT JOIN dpp_job_list djl on dci.container_id = djl.container_id
+        where djl.app_id is not null
+    </select>
+
+    <select id="getList"  resultMap="BaseResultMap">
+        select
+        <include refid="Base_Column_List" />
+        from "dpp_container_info"
+    </select>
+</mapper>

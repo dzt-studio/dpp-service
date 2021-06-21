@@ -1,0 +1,372 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="dzt.studio.dppservice.dao.job.DppJobListDao">
+    <resultMap id="BaseResultMap" type="dzt.studio.dppservice.domain.job.DppJobList">
+        <id column="id" jdbcType="VARCHAR" property="id"/>
+        <result column="job_name" jdbcType="VARCHAR" property="jobName"/>
+        <result column="job_status" jdbcType="VARCHAR" property="jobStatus"/>
+        <result column="start_time" jdbcType="TIMESTAMP" property="startTime"/>
+        <result column="run_time" jdbcType="BIGINT" property="runTime"/>
+        <result column="container_id" jdbcType="VARCHAR" property="containerId"/>
+        <result column="last_check_point_address" jdbcType="VARCHAR" property="lastCheckPointAddress"/>
+        <result column="describes" jdbcType="VARCHAR" property="describes"/>
+        <result column="enable_schedule" jdbcType="BOOLEAN" property="enableSchedule"/>
+        <result column="job_type" jdbcType="VARCHAR" property="jobType"/>
+        <result column="jar_name" jdbcType="VARCHAR" property="jarName"/>
+        <result column="app_params" jdbcType="VARCHAR" property="appParams"/>
+        <result column="main_class" jdbcType="VARCHAR" property="mainClass"/>
+        <result column="fv" jdbcType="VARCHAR" property="fv"/>
+        <result column="created_by" jdbcType="VARCHAR" property="createdBy"/>
+        <result column="created_at" jdbcType="TIMESTAMP" property="createdAt"/>
+        <result column="updated_by" jdbcType="VARCHAR" property="updatedBy"/>
+        <result column="updated_at" jdbcType="TIMESTAMP" property="updatedAt"/>
+        <result column="app_id" jdbcType="VARCHAR" property="appId"/>
+    </resultMap>
+    <sql id="Base_Column_List">
+        id, job_name, job_status, start_time, run_time, container_id, last_check_point_address,
+    describes, enable_schedule, job_type, jar_name, app_params, main_class, fv, created_by, 
+    created_at, updated_by, updated_at,app_id
+    </sql>
+    <select id="selectByPrimaryKey" parameterType="java.lang.String" resultMap="BaseResultMap">
+        select
+        <include refid="Base_Column_List"/>
+        from "dpp_job_list"
+        where id = #{id,jdbcType=VARCHAR}
+    </select>
+    <select id="selectByJobName" parameterType="java.lang.String" resultMap="BaseResultMap">
+        select
+        <include refid="Base_Column_List"/>
+        from "dpp_job_list"
+        where job_name = #{jobName,jdbcType=VARCHAR}
+    </select>
+    <delete id="deleteByPrimaryKey" parameterType="java.lang.String">
+        delete
+        from "dpp_job_list"
+        where id = #{id,jdbcType=VARCHAR}
+    </delete>
+    <insert id="insert" keyColumn="id" keyProperty="id" parameterType="dzt.studio.dppservice.domain.job.DppJobList"
+            useGeneratedKeys="true">
+        insert into "dpp_job_list" (job_name, job_status, start_time,
+                                    run_time, container_id, last_check_point_address,
+                                    describes, enable_schedule, job_type,
+                                    jar_name, app_params, main_class,
+                                    fv, created_by, created_at,
+                                    updated_by, updated_at)
+        values (#{jobName,jdbcType=VARCHAR}, #{jobStatus,jdbcType=VARCHAR}, #{startTime,jdbcType=TIMESTAMP},
+                #{runTime,jdbcType=BIGINT}, #{containerId,jdbcType=VARCHAR}, #{lastCheckPointAddress,jdbcType=VARCHAR},
+                #{describes,jdbcType=VARCHAR}, #{enableSchedule,jdbcType=BOOLEAN}, #{jobType,jdbcType=VARCHAR},
+                #{jarName,jdbcType=VARCHAR}, #{appParams,jdbcType=VARCHAR}, #{mainClass,jdbcType=VARCHAR},
+                #{fv,jdbcType=VARCHAR}, #{createdBy,jdbcType=VARCHAR}, #{createdAt,jdbcType=TIMESTAMP},
+                #{updatedBy,jdbcType=VARCHAR}, #{updatedAt,jdbcType=TIMESTAMP})
+    </insert>
+    <insert id="upsert" keyColumn="id" keyProperty="id" parameterType="dzt.studio.dppservice.domain.job.DppJobList"
+            useGeneratedKeys="true">
+        insert into "dpp_job_list" (
+        id,
+        job_name,
+        job_status, start_time,
+        run_time, container_id, last_check_point_address,
+        <if test="describes != null">
+            describes,
+        </if>
+        enable_schedule,
+        <if test="jobType != null">
+            job_type,
+        </if>
+        <if test="jarName != null">
+            jar_name,
+        </if>
+        <if test="appParams != null">
+            app_params,
+        </if>
+        <if test="mainClass != null">
+            main_class,
+        </if>
+        <if test="fv != null">
+            fv,
+        </if>
+        <if test="createdBy != null">
+            created_by,
+        </if>
+        created_at,
+        updated_by, updated_at,app_id)
+        values (#{id,jdbcType=VARCHAR},#{jobName,jdbcType=VARCHAR}, #{jobStatus,jdbcType=VARCHAR}, #{startTime,jdbcType=TIMESTAMP},
+        #{runTime,jdbcType=BIGINT}, #{containerId,jdbcType=VARCHAR}, #{lastCheckPointAddress,jdbcType=VARCHAR},
+        <if test="describes != null">
+            #{describes,jdbcType=VARCHAR},
+        </if>
+        #{enableSchedule,jdbcType=BOOLEAN},
+        <if test="jobType != null">
+            #{jobType,jdbcType=VARCHAR},
+        </if>
+        <if test="jarName != null">
+            #{jarName,jdbcType=VARCHAR},
+        </if>
+        <if test="appParams != null">
+            #{appParams,jdbcType=VARCHAR},
+        </if>
+        <if test="mainClass != null">
+            #{mainClass,jdbcType=VARCHAR},
+        </if>
+        <if test="fv != null">
+            #{fv,jdbcType=VARCHAR},
+        </if>
+        <if test="createdBy != null">
+            #{createdBy,jdbcType=VARCHAR},
+        </if>
+        #{createdAt,jdbcType=TIMESTAMP},
+        #{updatedBy,jdbcType=VARCHAR}, #{updatedAt,jdbcType=TIMESTAMP},#{appId,jdbcType=VARCHAR})
+        ON CONFLICT(job_name) do update set id =EXCLUDED.id, job_name =EXCLUDED.job_name,
+        <if test="jobType != null">
+            job_type =EXCLUDED.job_type,
+        </if>
+        app_id=EXCLUDED.app_id,
+        job_status=EXCLUDED.job_status,
+        <if test="createdBy != null">
+            created_by =EXCLUDED.created_by,
+        </if>
+        created_at =EXCLUDED.created_at,updated_by =EXCLUDED.updated_by,updated_at
+        =EXCLUDED.updated_at,
+        start_time =EXCLUDED.start_time,run_time =EXCLUDED.run_time,container_id
+        =EXCLUDED.container_id,last_check_point_address =EXCLUDED.last_check_point_address,
+        <if test="describes != null">
+            describes =EXCLUDED.describes,
+        </if>
+        <if test="jarName != null">
+            jar_name =EXCLUDED.jar_name,
+        </if>
+        <if test="appParams != null">
+            app_params =EXCLUDED.app_params,
+        </if>
+        <if test="mainClass != null">
+            main_class =EXCLUDED.main_class,
+        </if>
+        <if test="fv != null">
+            fv =EXCLUDED.fv,
+        </if>
+        enable_schedule =EXCLUDED.enable_schedule
+    </insert>
+    <insert id="insertSelective" keyColumn="id" keyProperty="id"
+            parameterType="dzt.studio.dppservice.domain.job.DppJobList" useGeneratedKeys="true">
+        insert into "dpp_job_list"
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="jobName != null">
+                job_name,
+            </if>
+            <if test="jobStatus != null">
+                job_status,
+            </if>
+            <if test="startTime != null">
+                start_time,
+            </if>
+            <if test="runTime != null">
+                run_time,
+            </if>
+            <if test="containerId != null">
+                container_id,
+            </if>
+            <if test="lastCheckPointAddress != null">
+                last_check_point_address,
+            </if>
+            <if test="describes != null">
+                describes,
+            </if>
+            <if test="enableSchedule != null">
+                enable_schedule,
+            </if>
+            <if test="jobType != null">
+                job_type,
+            </if>
+            <if test="jarName != null">
+                jar_name,
+            </if>
+            <if test="appParams != null">
+                app_params,
+            </if>
+            <if test="mainClass != null">
+                main_class,
+            </if>
+            <if test="fv != null">
+                fv,
+            </if>
+            <if test="createdBy != null">
+                created_by,
+            </if>
+            <if test="createdAt != null">
+                created_at,
+            </if>
+            <if test="updatedBy != null">
+                updated_by,
+            </if>
+            <if test="updatedAt != null">
+                updated_at,
+            </if>
+        </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="jobName != null">
+                #{jobName,jdbcType=VARCHAR},
+            </if>
+            <if test="jobStatus != null">
+                #{jobStatus,jdbcType=VARCHAR},
+            </if>
+            <if test="startTime != null">
+                #{startTime,jdbcType=TIMESTAMP},
+            </if>
+            <if test="runTime != null">
+                #{runTime,jdbcType=BIGINT},
+            </if>
+            <if test="containerId != null">
+                #{containerId,jdbcType=VARCHAR},
+            </if>
+            <if test="lastCheckPointAddress != null">
+                #{lastCheckPointAddress,jdbcType=VARCHAR},
+            </if>
+            <if test="describes != null">
+                #{describes,jdbcType=VARCHAR},
+            </if>
+            <if test="enableSchedule != null">
+                #{enableSchedule,jdbcType=BOOLEAN},
+            </if>
+            <if test="jobType != null">
+                #{jobType,jdbcType=VARCHAR},
+            </if>
+            <if test="jarName != null">
+                #{jarName,jdbcType=VARCHAR},
+            </if>
+            <if test="appParams != null">
+                #{appParams,jdbcType=VARCHAR},
+            </if>
+            <if test="mainClass != null">
+                #{mainClass,jdbcType=VARCHAR},
+            </if>
+            <if test="fv != null">
+                #{fv,jdbcType=VARCHAR},
+            </if>
+            <if test="createdBy != null">
+                #{createdBy,jdbcType=VARCHAR},
+            </if>
+            <if test="createdAt != null">
+                #{createdAt,jdbcType=TIMESTAMP},
+            </if>
+            <if test="updatedBy != null">
+                #{updatedBy,jdbcType=VARCHAR},
+            </if>
+            <if test="updatedAt != null">
+                #{updatedAt,jdbcType=TIMESTAMP},
+            </if>
+        </trim>
+    </insert>
+    <update id="updateByPrimaryKeySelective" parameterType="dzt.studio.dppservice.domain.job.DppJobList">
+        update "dpp_job_list"
+        <set>
+            <if test="jobName != null">
+                job_name = #{jobName,jdbcType=VARCHAR},
+            </if>
+            <if test="jobStatus != null">
+                job_status = #{jobStatus,jdbcType=VARCHAR},
+            </if>
+            <if test="startTime != null">
+                start_time = #{startTime,jdbcType=TIMESTAMP},
+            </if>
+            <if test="runTime != null">
+                run_time = #{runTime,jdbcType=BIGINT},
+            </if>
+            <if test="containerId != null">
+                container_id = #{containerId,jdbcType=VARCHAR},
+            </if>
+            <if test="lastCheckPointAddress != null">
+                last_check_point_address = #{lastCheckPointAddress,jdbcType=VARCHAR},
+            </if>
+            <if test="describes != null">
+                describes = #{describes,jdbcType=VARCHAR},
+            </if>
+            <if test="enableSchedule != null">
+                enable_schedule = #{enableSchedule,jdbcType=BOOLEAN},
+            </if>
+            <if test="jobType != null">
+                job_type = #{jobType,jdbcType=VARCHAR},
+            </if>
+            <if test="jarName != null">
+                jar_name = #{jarName,jdbcType=VARCHAR},
+            </if>
+            <if test="appParams != null">
+                app_params = #{appParams,jdbcType=VARCHAR},
+            </if>
+            <if test="mainClass != null">
+                main_class = #{mainClass,jdbcType=VARCHAR},
+            </if>
+            <if test="fv != null">
+                fv = #{fv,jdbcType=VARCHAR},
+            </if>
+            <if test="createdBy != null">
+                created_by = #{createdBy,jdbcType=VARCHAR},
+            </if>
+            <if test="createdAt != null">
+                created_at = #{createdAt,jdbcType=TIMESTAMP},
+            </if>
+            <if test="updatedBy != null">
+                updated_by = #{updatedBy,jdbcType=VARCHAR},
+            </if>
+            <if test="updatedAt != null">
+                updated_at = #{updatedAt,jdbcType=TIMESTAMP},
+            </if>
+            <if test="appId != null">
+                app_id = #{appId,jdbcType=VARCHAR},
+            </if>
+        </set>
+        where id = #{id,jdbcType=VARCHAR}
+    </update>
+    <update id="updateByPrimaryKey" parameterType="dzt.studio.dppservice.domain.job.DppJobList">
+        update "dpp_job_list"
+        set job_name                 = #{jobName,jdbcType=VARCHAR},
+            job_status               = #{jobStatus,jdbcType=VARCHAR},
+            start_time               = #{startTime,jdbcType=TIMESTAMP},
+            run_time                 = #{runTime,jdbcType=BIGINT},
+            container_id             = #{containerId,jdbcType=VARCHAR},
+            last_check_point_address = #{lastCheckPointAddress,jdbcType=VARCHAR},
+            describes                = #{describes,jdbcType=VARCHAR},
+            enable_schedule          = #{enableSchedule,jdbcType=BOOLEAN},
+            job_type                 = #{jobType,jdbcType=VARCHAR},
+            jar_name                 = #{jarName,jdbcType=VARCHAR},
+            app_params               = #{appParams,jdbcType=VARCHAR},
+            main_class               = #{mainClass,jdbcType=VARCHAR},
+            fv                       = #{fv,jdbcType=VARCHAR},
+            created_by               = #{createdBy,jdbcType=VARCHAR},
+            created_at               = #{createdAt,jdbcType=TIMESTAMP},
+            updated_by               = #{updatedBy,jdbcType=VARCHAR},
+            updated_at               = #{updatedAt,jdbcType=TIMESTAMP}
+        where id = #{id,jdbcType=VARCHAR}
+    </update>
+    <select id="selectAll" parameterType="java.lang.String" resultMap="BaseResultMap">
+        select
+        <include refid="Base_Column_List"/>
+        from "dpp_job_list"
+        order by start_time desc
+    </select>
+    <select id="getJobInfo"  parameterType="java.lang.String" resultType="dzt.studio.dppservice.domain.job.JobParams">
+        SELECT
+            djl.id as jobId,
+            djl.job_name AS jobName,
+            djl.container_id AS containerId,
+            djl.last_check_point_address as lastCheckPointAddress,
+            djl.jar_name as jarName,
+            djl.app_params as appParams,
+            djl.main_class as mainClass,
+            djl.fv as fv,
+            djc.sql_details AS flinkSql,
+            djc.parallelism,
+            djc.checkpoint_enable AS checkpointEnable,
+            djc.checkpoint_interval AS checkpointInterval,
+            djc.restart_strategy_count AS restartStrategyCount,
+            djc.restart_strategy_time AS restartStrategyTime,
+            djl.enable_schedule as enableSchedule,
+            dci.container_msg as containerMsg
+        FROM
+            dpp_job_list djl
+                LEFT JOIN dpp_job_config djc
+                          on djl.id = djc.job_id
+                LEFT JOIN dpp_container_info dci
+                          on djl.container_id = dci.container_id
+        where djl.job_name = #{jobName,jdbcType=VARCHAR}
+    </select>
+</mapper>
