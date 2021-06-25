@@ -45,15 +45,17 @@ class FlinkJobsSchedules {
                     it.containerUrl!! + "/jobs/{1}/checkpoints", Any::class.java, it.appId
                 )
                 val jobCheckPoint = JSON.parseObject(JSON.toJSONString(rc), JobCheckPoint::class.java)
-                val dppJobList = DppJobList()
-                dppJobList.id = it.jobId
-                dppJobList.jobName = jobCurrentStatus.name
-                dppJobList.jobStatus = jobCurrentStatus.state
-                dppJobList.runTime = jobCurrentStatus.duration
-                if (jobCheckPoint.latest!!.savepoint == null && jobCheckPoint.latest!!.completed != null) {
-                    dppJobList.lastCheckPointAddress = jobCheckPoint.latest!!.completed!!.external_path
+                if(!(it.jobStatus == "BUILDING" && jobCurrentStatus.state=="CANCELED")){
+                    val dppJobList = DppJobList()
+                    dppJobList.id = it.jobId
+                    dppJobList.jobName = jobCurrentStatus.name
+                    dppJobList.jobStatus = jobCurrentStatus.state
+                    dppJobList.runTime = jobCurrentStatus.duration
+                    if (jobCheckPoint.latest!!.savepoint == null && jobCheckPoint.latest!!.completed != null) {
+                        dppJobList.lastCheckPointAddress = jobCheckPoint.latest!!.completed!!.external_path
+                    }
+                    dppJobListDAO!!.updateByPrimaryKeySelective(dppJobList)
                 }
-                dppJobListDAO!!.updateByPrimaryKeySelective(dppJobList)
             } catch (e: Exception) {
                 if (!e.localizedMessage.contains("404 Not Found")) {
                     logger.error(e.localizedMessage)

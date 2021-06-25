@@ -44,4 +44,6 @@ interface JobService {
 
     fun jobCommitWithJar(jobName: String):Boolean
 
+    fun getAppContainerInfo(appId:String):String
+
 }

@@ -232,28 +232,66 @@ class JobServiceImpl : JobService {
     }
 
     override fun jobCommitWithJar(jobName: String): Boolean {
-        val config = dppJobListDAO?.getJobInfo(jobName)
-        var r = java.lang.StringBuilder()
-        if(config?.jarName !=null){
-            val command = if (!config.lastCheckPointAddress.isNullOrBlank()) {
-                CommandUtils.runWithAppCommand(config.mainClass!!, config.containerId!!, config.jarName!!, config.appParams, config.lastCheckPointAddress!!, config.fv!!)
-            } else {
-                CommandUtils.runWithAppCommand(config.mainClass!!, config.containerId!!, config.jarName!!, config.appParams, config.fv!!)
-            }
-            val sshRegisterEntity = osEntity?.let { SSHRegister(it) }
-            r = sshRegisterEntity?.exec(command)!!
-            if (r.contains("Job has been submitted with JobID")) {
-                val jobId = r.split("Job has been submitted with JobID ")[1].trim()
+        return try {
+            val config = dppJobListDAO?.getJobInfo(jobName)
+            var r = java.lang.StringBuilder()
+            if (config?.jarName != null) {
+                val command = if (!config.lastCheckPointAddress.isNullOrBlank()) {
+                    CommandUtils.runWithAppCommand(
+                        config.mainClass!!,
+                        config.containerId!!,
+                        config.jarName!!,
+                        config.appParams,
+                        config.lastCheckPointAddress!!,
+                        config.fv!!
+                    )
+                } else {
+                    CommandUtils.runWithAppCommand(
+                        config.mainClass!!,
+                        config.containerId!!,
+                        config.jarName!!,
+                        config.appParams,
+                        config.fv!!
+                    )
+                }
+                val sshRegisterEntity = osEntity?.let { SSHRegister(it) }
                 val dppJobList = DppJobList()
-//                dppJobList.jobName = params.jobName
-//                dppJobList.jobId = jobId
-//                dppJobList.jobStatus = JobStatus.RUNNING.toString()
-//                dppJobList.startTime = Date()
-//                dppJobList.containerId = params.containerId
-                dppJobListDAO!!.insert(dppJobList)
+                dppJobList.id = config.jobId
+                dppJobList.jobStatus = JobStatus.BUILDING.toString()
+                dppJobListDAO!!.updateByPrimaryKeySelective(dppJobList)
+                threadpool?.execute {
+                    r = sshRegisterEntity?.exec(command)!!
+                    if (r.contains("Job has been submitted with JobID")) {
+                        val appId = r.split("Job has been submitted with JobID ")[1].trim()
+                        val dppJobList = DppJobList()
+                        dppJobList.jobName = config.jobName
+                        dppJobList.id = config.jobId
+                        dppJobList.appId = appId
+                        dppJobList.jobStatus = JobStatus.RUNNING.toString()
+                        dppJobList.startTime = Date()
+                        dppJobList.containerId = config.containerId
+                        dppJobListDAO!!.updateByPrimaryKeySelective(dppJobList)
+                    } else {
+                        val dppJobList = DppJobList()
+                        dppJobList.id = config.jobId
+                        dppJobList.jobStatus = JobStatus.FAILED.toString()
+                        dppJobListDAO!!.updateByPrimaryKeySelective(dppJobList)
+                    }
+                    val dppJobLog = DppJobLog(
+                        jobId = config.jobId,
+                        logInfo = r.toString()
+                    )
+                    dppJobLogDao?.upsert(dppJobLog)
+                }
             }
+            true
+        } catch (e: Exception) {
+            false
         }
-        return false
+    }
+
+    override fun getAppContainerInfo(appId: String): String {
+        return dppJobListDAO?.getAppContainerInfo(appId)!!
     }
 
     fun replaceAllBlank(str: String?): String? {

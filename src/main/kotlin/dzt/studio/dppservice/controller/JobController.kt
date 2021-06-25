@@ -67,6 +67,16 @@ class JobController {
         }
     }
 
+    @GetMapping("/job-commit-with-jar")
+    fun jobCommitWithJar(@RequestParam(value = "jobName") jobName: String): JSONResult<Any> {
+        return if (jobService?.jobCommitWithJar(jobName) == true) {
+            JSONResult(HttpCode.OK.code, "操作成功")
+        } else {
+            JSONResult(HttpCode.OK.code, "操作失败")
+        }
+    }
+
+
     @GetMapping("/stop")
     fun jobStop(@RequestParam(value = "jobId") jobId: String): JSONResult<Any> {
         return if (jobService?.jobStop(jobId) == true) {
@@ -90,6 +100,11 @@ class JobController {
     @GetMapping("/app-jar-list")
     fun appJarList(): JSONResult<Any> {
         return JSONResult(HttpCode.OK.code, "操作成功", jobService?.getAppJarList())
+    }
+
+    @GetMapping("/app-container-info")
+    fun getAppContainerInfo(@RequestParam(value = "appId") appId: String): JSONResult<Any> {
+        return JSONResult(HttpCode.OK.code, "操作成功", jobService?.getAppContainerInfo(appId))
     }
 
 }

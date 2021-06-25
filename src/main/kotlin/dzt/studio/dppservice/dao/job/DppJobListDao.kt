@@ -9,4 +9,5 @@ import org.springframework.stereotype.Repository
 interface DppJobListDao : MyBatisBaseDao<DppJobList, String> {
     fun getJobInfo(jobId:String): JobParams?
     fun selectByJobName(jobName:String):DppJobList?
+    fun getAppContainerInfo(appId:String):String
 }

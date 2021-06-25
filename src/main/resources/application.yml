@@ -2,7 +2,7 @@ server:
   port: 8083
 spring:
   datasource:
-    url: ${JDBC-URL:jdbc:postgresql://localhost:5432/dpp?user=postgres&password=123456&useUnicode=true&characterEncoding=utf-8&useSSL=true}
+    url: ${JDBC-URL}
     driver-class-name: org.postgresql.Driver
   servlet:
     multipart:
@@ -22,7 +22,7 @@ pagehelper:
   supportMethodsArguments: true
   params: count=countSql
 daphost:
-  host: ${DAPHOST-HOST:192.168.103.120}
-  port: ${DAPHOST-PORT:22}
-  user: ${DAPHOST-USER:root}
-  password: ${DAPHOST-PASSWORD:Qbkj@2020}
+  host: ${DAPHOST-HOST}
+  port: ${DAPHOST-PORT}
+  user: ${DAPHOST-USER}
+  password: ${DAPHOST-PASSWORD}

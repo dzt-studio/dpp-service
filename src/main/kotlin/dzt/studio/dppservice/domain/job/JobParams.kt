@@ -8,12 +8,14 @@ package dzt.studio.dppservice.domain.job
  */
 class JobParams {
 
-    var jobId:String? = null
+    var jobId: String? = null
 
     /**
      * 任务名称
      */
     var jobName: String? = null
+
+    var jobStatus: String? = null
 
     /**
      * 任务类型
@@ -56,17 +58,17 @@ class JobParams {
      */
     var containerId: String? = null
 
-    var lastCheckPointAddress:String? = null
+    var lastCheckPointAddress: String? = null
 
-    var describes:String? = null
+    var describes: String? = null
 
-    var enableSchedule:Boolean = false
+    var enableSchedule: Boolean = false
 
-    var containerMsg:String? = null
+    var containerMsg: String? = null
 
-    var jarName:String? =null
-    var appParams:String? =null
-    var mainClass:String? =null
+    var jarName: String? = null
+    var appParams: String? = null
+    var mainClass: String? = null
 
-    var fv :String? =null
+    var fv: String? = null
 }

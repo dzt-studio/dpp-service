@@ -23,7 +23,8 @@
         <result column="app_id" jdbcType="VARCHAR" property="appId"/>
     </resultMap>
     <sql id="Base_Column_List">
-        id, job_name, job_status, start_time, run_time, container_id, last_check_point_address,
+        id
+        , job_name, job_status, start_time, run_time, container_id, last_check_point_address,
     describes, enable_schedule, job_type, jar_name, app_params, main_class, fv, created_by, 
     created_at, updated_by, updated_at,app_id
     </sql>
@@ -38,6 +39,12 @@
         <include refid="Base_Column_List"/>
         from "dpp_job_list"
         where job_name = #{jobName,jdbcType=VARCHAR}
+    </select>
+    <select id="getAppContainerInfo" parameterType="java.lang.String" resultType="java.lang.String">
+        select dci.container_url
+        from dpp_job_list djl
+                 left join dpp_container_info dci on djl.container_id = dci.container_id
+        where djl.app_id = #{appId,jdbcType=VARCHAR}
     </select>
     <delete id="deleteByPrimaryKey" parameterType="java.lang.String">
         delete
@@ -90,7 +97,8 @@
         </if>
         created_at,
         updated_by, updated_at,app_id)
-        values (#{id,jdbcType=VARCHAR},#{jobName,jdbcType=VARCHAR}, #{jobStatus,jdbcType=VARCHAR}, #{startTime,jdbcType=TIMESTAMP},
+        values (#{id,jdbcType=VARCHAR},#{jobName,jdbcType=VARCHAR}, #{jobStatus,jdbcType=VARCHAR},
+        #{startTime,jdbcType=TIMESTAMP},
         #{runTime,jdbcType=BIGINT}, #{containerId,jdbcType=VARCHAR}, #{lastCheckPointAddress,jdbcType=VARCHAR},
         <if test="describes != null">
             #{describes,jdbcType=VARCHAR},
@@ -343,30 +351,29 @@
         from "dpp_job_list"
         order by start_time desc
     </select>
-    <select id="getJobInfo"  parameterType="java.lang.String" resultType="dzt.studio.dppservice.domain.job.JobParams">
-        SELECT
-            djl.id as jobId,
-            djl.job_name AS jobName,
-            djl.container_id AS containerId,
-            djl.last_check_point_address as lastCheckPointAddress,
-            djl.jar_name as jarName,
-            djl.app_params as appParams,
-            djl.main_class as mainClass,
-            djl.fv as fv,
-            djc.sql_details AS flinkSql,
-            djc.parallelism,
-            djc.checkpoint_enable AS checkpointEnable,
-            djc.checkpoint_interval AS checkpointInterval,
-            djc.restart_strategy_count AS restartStrategyCount,
-            djc.restart_strategy_time AS restartStrategyTime,
-            djl.enable_schedule as enableSchedule,
-            dci.container_msg as containerMsg
-        FROM
-            dpp_job_list djl
-                LEFT JOIN dpp_job_config djc
-                          on djl.id = djc.job_id
-                LEFT JOIN dpp_container_info dci
-                          on djl.container_id = dci.container_id
+    <select id="getJobInfo" parameterType="java.lang.String" resultType="dzt.studio.dppservice.domain.job.JobParams">
+        SELECT djl.id                       as jobId,
+               djl.job_name                 AS jobName,
+               djl.container_id             AS containerId,
+               djl.last_check_point_address as lastCheckPointAddress,
+               djl.jar_name                 as jarName,
+               djl.job_status               as jobStatus,
+               djl.app_params               as appParams,
+               djl.main_class               as mainClass,
+               djl.fv                       as fv,
+               djc.sql_details              AS flinkSql,
+               djc.parallelism,
+               djc.checkpoint_enable        AS checkpointEnable,
+               djc.checkpoint_interval      AS checkpointInterval,
+               djc.restart_strategy_count   AS restartStrategyCount,
+               djc.restart_strategy_time    AS restartStrategyTime,
+               djl.enable_schedule          as enableSchedule,
+               dci.container_msg            as containerMsg
+        FROM dpp_job_list djl
+                 LEFT JOIN dpp_job_config djc
+                           on djl.id = djc.job_id
+                 LEFT JOIN dpp_container_info dci
+                           on djl.container_id = dci.container_id
         where djl.job_name = #{jobName,jdbcType=VARCHAR}
     </select>
 </mapper>
