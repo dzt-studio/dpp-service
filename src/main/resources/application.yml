@@ -2,7 +2,7 @@ server:
   port: 8083
 spring:
   datasource:
-    url: ${JDBC-URL}
+    url: ${JDBC_URL}
     driver-class-name: org.postgresql.Driver
   servlet:
     multipart:
@@ -22,7 +22,7 @@ pagehelper:
   supportMethodsArguments: true
   params: count=countSql
 daphost:
-  host: ${DAPHOST-HOST}
-  port: ${DAPHOST-PORT}
-  user: ${DAPHOST-USER}
-  password: ${DAPHOST-PASSWORD}
+  host: ${DAPHOST_HOST}
+  port: ${DAPHOST_PORT}
+  user: ${DAPHOST_USER}
+  password: ${DAPHOST_PASSWORD}

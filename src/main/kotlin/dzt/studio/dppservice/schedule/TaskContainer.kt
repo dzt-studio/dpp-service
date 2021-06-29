@@ -51,9 +51,14 @@ class TaskContainer {
     fun putMap(dppJobScheduled: DppJobScheduled): TaskList? {
         val taskListDto = TaskList()
         taskListDto.cron=dppJobScheduled.cron
-        taskListDto.jobId = dppJobScheduled.jobId
+        taskListDto.jobId = dppJobScheduled.jobName
         val future = threadPoolTaskScheduler!!.schedule(Runnable {
-            dppJobScheduled.jobId?.let { this.jobService!!.jobCommit(it) }
+            when(dppJobScheduled.jobType){
+                "Flink Sql" ->
+                    dppJobScheduled.jobName?.let { this.jobService!!.jobCommit(it) }
+                "Flink Jar" ->
+                    dppJobScheduled.jobName?.let { this.jobService!!.jobCommitWithJar(it) }
+            }
         }, CronTrigger(dppJobScheduled.cron!!))
         taskListDto.future = future
         currentHashMap[dppJobScheduled.id!!] = taskListDto

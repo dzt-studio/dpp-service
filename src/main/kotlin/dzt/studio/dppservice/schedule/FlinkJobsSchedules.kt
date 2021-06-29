@@ -6,6 +6,7 @@ import dzt.studio.dppservice.dao.job.DppJobListDao
 import dzt.studio.dppservice.domain.job.DppJobList
 import dzt.studio.dppservice.domain.job.JobCheckPoint
 import dzt.studio.dppservice.domain.job.JobCurrentStatus
+import dzt.studio.dppservice.util.JobStatus
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.scheduling.annotation.EnableScheduling
@@ -59,6 +60,11 @@ class FlinkJobsSchedules {
             } catch (e: Exception) {
                 if (!e.localizedMessage.contains("404 Not Found")) {
                     logger.error(e.localizedMessage)
+                }else{
+                    val dppJobList = DppJobList()
+                    dppJobList.id = it.jobId
+                    dppJobList.jobStatus = JobStatus.FINISHED.toString()
+                    dppJobListDAO!!.updateByPrimaryKeySelective(dppJobList)
                 }
             }
         }

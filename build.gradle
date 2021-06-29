@@ -8,7 +8,6 @@ plugins {
 group = "dzt.studio"
 version = "0.0.1-incubation"
 java.sourceCompatibility = JavaVersion.VERSION_11
-
 repositories {
     mavenLocal()
     maven { url 'https://maven.aliyun.com/repository/central' }

@@ -3,17 +3,23 @@
 <mapper namespace="dzt.studio.dppservice.dao.job.DppJobScheduledDao">
   <resultMap id="BaseResultMap" type="dzt.studio.dppservice.domain.job.DppJobScheduled">
     <id column="id" jdbcType="VARCHAR" property="id" />
-    <result column="job_id" jdbcType="VARCHAR" property="jobId" />
+    <result column="job_name" jdbcType="VARCHAR" property="jobName" />
     <result column="cron" jdbcType="VARCHAR" property="cron" />
     <result column="created_by" jdbcType="VARCHAR" property="createdBy" />
     <result column="created_at" jdbcType="TIMESTAMP" property="createdAt" />
     <result column="updated_by" jdbcType="VARCHAR" property="updatedBy" />
     <result column="updated_at" jdbcType="TIMESTAMP" property="updatedAt" />
     <result column="is_open" jdbcType="BOOLEAN" property="isOpen" />
+    <result column="job_type" jdbcType="VARCHAR" property="jobType" />
   </resultMap>
   <sql id="Base_Column_List">
-    id, job_id, cron, created_by, created_at, updated_by, updated_at, is_open
+    id, job_name, cron, created_by, created_at, updated_by, updated_at, is_open,job_type
   </sql>
+  <select id="selectAll" parameterType="java.lang.String" resultMap="BaseResultMap">
+    select
+    <include refid="Base_Column_List"/>
+    from "dpp_job_scheduled"
+  </select>
   <select id="selectByPrimaryKey" parameterType="java.lang.String" resultMap="BaseResultMap">
     select 
     <include refid="Base_Column_List" />
@@ -25,17 +31,17 @@
     where id = #{id,jdbcType=VARCHAR}
   </delete>
   <insert id="insert" keyColumn="id" keyProperty="id" parameterType="dzt.studio.dppservice.domain.job.DppJobScheduled" useGeneratedKeys="true">
-    insert into "dpp_job_scheduled" (job_id, cron, created_by, 
+    insert into "dpp_job_scheduled" (id,job_name, cron, created_by,
       created_at, updated_by, updated_at, 
-      is_open)
-    values (#{jobId,jdbcType=VARCHAR}, #{cron,jdbcType=VARCHAR}, #{createdBy,jdbcType=VARCHAR}, 
+      is_open,job_type)
+    values (#{id,jdbcType=VARCHAR},#{jobName,jdbcType=VARCHAR}, #{cron,jdbcType=VARCHAR}, #{createdBy,jdbcType=VARCHAR},
       #{createdAt,jdbcType=TIMESTAMP}, #{updatedBy,jdbcType=VARCHAR}, #{updatedAt,jdbcType=TIMESTAMP}, 
-      #{isOpen,jdbcType=BOOLEAN})
+      #{isOpen,jdbcType=BOOLEAN},#{jobType,jdbcType=VARCHAR})
   </insert>
   <insert id="insertSelective" keyColumn="id" keyProperty="id" parameterType="dzt.studio.dppservice.domain.job.DppJobScheduled" useGeneratedKeys="true">
     insert into "dpp_job_scheduled"
     <trim prefix="(" suffix=")" suffixOverrides=",">
-      <if test="jobId != null">
+      <if test="jobName != null">
         job_id,
       </if>
       <if test="cron != null">
@@ -56,10 +62,13 @@
       <if test="isOpen != null">
         is_open,
       </if>
+      <if test="jobType != null">
+        job_type,
+      </if>
     </trim>
     <trim prefix="values (" suffix=")" suffixOverrides=",">
-      <if test="jobId != null">
-        #{jobId,jdbcType=VARCHAR},
+      <if test="jobName != null">
+        #{jobName,jdbcType=VARCHAR},
       </if>
       <if test="cron != null">
         #{cron,jdbcType=VARCHAR},
@@ -79,13 +88,16 @@
       <if test="isOpen != null">
         #{isOpen,jdbcType=BOOLEAN},
       </if>
+      <if test="jobType != null">
+        #{jobType,jdbcType=VARCHAR},
+      </if>
     </trim>
   </insert>
   <update id="updateByPrimaryKeySelective" parameterType="dzt.studio.dppservice.domain.job.DppJobScheduled">
     update "dpp_job_scheduled"
     <set>
-      <if test="jobId != null">
-        job_id = #{jobId,jdbcType=VARCHAR},
+      <if test="jobName != null">
+        job_name = #{jobName,jdbcType=VARCHAR},
       </if>
       <if test="cron != null">
         cron = #{cron,jdbcType=VARCHAR},
@@ -105,18 +117,32 @@
       <if test="isOpen != null">
         is_open = #{isOpen,jdbcType=BOOLEAN},
       </if>
+      <if test="jobType != null">
+        job_type = #{jobType,jdbcType=VARCHAR},
+      </if>
     </set>
     where id = #{id,jdbcType=VARCHAR}
   </update>
   <update id="updateByPrimaryKey" parameterType="dzt.studio.dppservice.domain.job.DppJobScheduled">
     update "dpp_job_scheduled"
-    set job_id = #{jobId,jdbcType=VARCHAR},
+    set job_Name = #{jobName,jdbcType=VARCHAR},
       cron = #{cron,jdbcType=VARCHAR},
       created_by = #{createdBy,jdbcType=VARCHAR},
       created_at = #{createdAt,jdbcType=TIMESTAMP},
       updated_by = #{updatedBy,jdbcType=VARCHAR},
       updated_at = #{updatedAt,jdbcType=TIMESTAMP},
-      is_open = #{isOpen,jdbcType=BOOLEAN}
+      is_open = #{isOpen,jdbcType=BOOLEAN},
+      job_type = #{jobType,jdbcType=VARCHAR},
     where id = #{id,jdbcType=VARCHAR}
   </update>
+  <select id="getEnableScheduleJob" resultType="java.lang.String">
+    SELECT
+      job_name
+    FROM
+      dpp_job_list
+    WHERE
+      enable_schedule = TRUE
+      AND job_name NOT IN ( SELECT job_name FROM dpp_job_scheduled )
+  </select>
+
 </mapper>

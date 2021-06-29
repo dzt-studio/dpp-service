@@ -10,9 +10,9 @@ import java.util.*
  * @Date 2021-06-09 14:39
  */
 class DppJobScheduled: Serializable {
-    var id: String? = null
+    var id: String? = UUID.randomUUID().toString()
 
-    var jobId: String? = null
+    var jobName: String? = null
 
     var cron: String? = null
 
@@ -24,7 +24,11 @@ class DppJobScheduled: Serializable {
 
     var updatedAt: Date? = null
 
-    var isOpen: Boolean? = null
+    var isOpen: Boolean? = false
+
+    var jobType: String? = null
+
+    var status: String?=null
 
     var serialVersionUID = 1L
 }
