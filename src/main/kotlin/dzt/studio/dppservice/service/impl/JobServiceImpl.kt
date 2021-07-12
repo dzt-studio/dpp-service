@@ -142,7 +142,8 @@ class JobServiceImpl : JobService {
                 config.checkpointInterval = config.checkpointInterval!! * 1000
             }
             config?.restartStrategyTime = config?.restartStrategyTime!! * 1000
-            val paramsJson = JSON.toJSONString(JSON.toJSONString(config))
+            var paramsJson = JSON.toJSONString(JSON.toJSONString(config))
+            paramsJson = paramsJson.replace( "`","\\`")
             val command = if (!config.lastCheckPointAddress.isNullOrBlank()) {
                 CommandUtils.runCommand(
                     config.fv!!,
