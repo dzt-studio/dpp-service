@@ -60,12 +60,11 @@ class FlinkJobsSchedules {
             } catch (e: Exception) {
                 if (!e.localizedMessage.contains("404 Not Found")) {
                     logger.error(e.localizedMessage)
-                }else{
-                    val dppJobList = DppJobList()
-                    dppJobList.id = it.jobId
-                    dppJobList.jobStatus = JobStatus.FINISHED.toString()
-                    dppJobListDAO!!.updateByPrimaryKeySelective(dppJobList)
                 }
+                val dppJobList = DppJobList()
+                dppJobList.id = it.jobId
+                dppJobList.jobStatus = JobStatus.FINISHED.toString()
+                dppJobListDAO!!.updateByPrimaryKeySelective(dppJobList)
             }
         }
     }
