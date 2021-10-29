@@ -351,6 +351,20 @@
         from "dpp_job_list"
         order by start_time desc
     </select>
+    <select id="selectByParams" parameterType="dzt.studio.dppservice.domain.job.FilterParams" resultMap="BaseResultMap">
+        select
+        <include refid="Base_Column_List"/>
+        from "dpp_job_list"
+        <where>
+            <if test="jobStatus != null and jobStatus != ''">
+                job_status = #{jobStatus,jdbcType=VARCHAR}
+            </if>
+            <if test="jobName != null and jobName != '' ">
+                and job_name like CONCAT('%',#{jobName,jdbcType=VARCHAR},'%')
+            </if>
+        </where>
+        order by start_time desc
+    </select>
     <select id="getJobInfo" parameterType="java.lang.String" resultType="dzt.studio.dppservice.domain.job.JobParams">
         SELECT djl.id                       as jobId,
                djl.job_name                 AS jobName,

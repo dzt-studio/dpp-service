@@ -16,6 +16,7 @@ import dzt.studio.dppservice.util.*
 import org.apache.flink.table.api.EnvironmentSettings
 import org.apache.flink.table.api.TableException
 import org.apache.flink.table.api.internal.TableEnvironmentImpl
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
@@ -58,6 +59,8 @@ class JobServiceImpl : JobService {
 
     final var threadpool: ThreadPoolExecutor? = null
 
+    val logger = LoggerFactory.getLogger(this.javaClass)
+
     init {
         threadpool = ThreadPoolExecutor(10, 10, 1, TimeUnit.MINUTES, SynchronousQueue())
     }
@@ -73,6 +76,10 @@ class JobServiceImpl : JobService {
         } catch (e: Exception) {
             false
         }
+    }
+
+    override fun handleFilter(params: FilterParams): PageResult? {
+        return params.let { getFilterPageInfo(it).let { PageUtils.getPageResult(params, it) } }
     }
 
     override fun saveJarApp(params: SaveWithJarParm): Boolean {
@@ -153,6 +160,7 @@ class JobServiceImpl : JobService {
             } else {
                 CommandUtils.runCommand(config.fv!!, config.containerId!!) + " $paramsJson 2>&1"
             }
+            logger.info(command)
             val sshRegisterEntity = osEntity?.let { SSHRegister(it) }
 
             val dppJobList = DppJobList()
@@ -321,6 +329,14 @@ class JobServiceImpl : JobService {
         val pageSize = pageRequest.pageSize
         PageHelper.startPage<Any>(pageNum, pageSize)
         val jobList = dppJobListDAO!!.selectAll()
+        return PageInfo<DppJobList>(jobList)
+    }
+
+    private fun getFilterPageInfo(params: FilterParams): PageInfo<DppJobList> {
+        val pageNum = params.pageNum
+        val pageSize = params.pageSize
+        PageHelper.startPage<Any>(pageNum, pageSize)
+        val jobList = dppJobListDAO!!.selectByParams(params)
         return PageInfo<DppJobList>(jobList)
     }
 

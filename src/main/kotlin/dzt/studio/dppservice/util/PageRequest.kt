@@ -6,7 +6,7 @@ package dzt.studio.dppservice.util
  * @Author dzt
  * @Date 2020-12-28 17:19
  */
-class PageRequest {
+open class PageRequest {
     /**
      * 当前页码
      */
