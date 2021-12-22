@@ -8,6 +8,9 @@
         <result column="container_url" jdbcType="VARCHAR" property="containerUrl"/>
         <result column="container_msg" jdbcType="VARCHAR" property="containerMsg"/>
         <result column="container_version" jdbcType="VARCHAR" property="containerVersion"/>
+        <result column="container_type" jdbcType="INTEGER" property="containerType"/>
+        <result column="jm" jdbcType="INTEGER" property="jm"/>
+        <result column="tm" jdbcType="INTEGER" property="tm"/>
     </resultMap>
     <sql id="Base_Column_List">
         id, container_id, container_name, container_url, container_msg, container_version
@@ -21,7 +24,7 @@
     <select id="selectAll" parameterType="java.lang.String" resultMap="BaseResultMap">
         select
         <include refid="Base_Column_List"/>
-        from "dpp_container_info"
+        from "dpp_container_info" where container_type = 1
     </select>
     <delete id="deleteByPrimaryKey" parameterType="java.lang.String">
         delete
@@ -31,9 +34,10 @@
     <insert id="insert" keyColumn="id" keyProperty="id"
             parameterType="dzt.studio.dppservice.domain.job.DppContainerInfo" useGeneratedKeys="true">
         insert into "dpp_container_info" (id,container_id, container_name, container_url,
-                                          container_msg, container_version)
+                                          container_msg, container_version,container_type,jm,tm)
         values (#{id,jdbcType=VARCHAR},#{containerId,jdbcType=VARCHAR}, #{containerName,jdbcType=VARCHAR}, #{containerUrl,jdbcType=VARCHAR},
-                #{containerMsg,jdbcType=VARCHAR}, #{containerVersion,jdbcType=VARCHAR})
+                #{containerMsg,jdbcType=VARCHAR}, #{containerVersion,jdbcType=VARCHAR}, #{containerType,jdbcType=INTEGER}
+                   , #{jm,jdbcType=INTEGER}, #{tm,jdbcType=INTEGER})
     </insert>
     <insert id="insertSelective" keyColumn="id" keyProperty="id"
             parameterType="dzt.studio.dppservice.domain.job.DppContainerInfo" useGeneratedKeys="true">
@@ -119,6 +123,18 @@
     <select id="getList"  resultMap="BaseResultMap">
         select
         <include refid="Base_Column_List" />
+        from "dpp_container_info" where container_type = 1
+    </select>
+
+    <select id="getFvList"  resultType="java.lang.String">
+        select distinct
+            container_version
         from "dpp_container_info"
+    </select>
+
+    <select id="deleteByContainerId" parameterType="java.lang.String" >
+        delete
+        from "dpp_container_info"
+        where container_id = #{containerId,jdbcType=VARCHAR}
     </select>
 </mapper>

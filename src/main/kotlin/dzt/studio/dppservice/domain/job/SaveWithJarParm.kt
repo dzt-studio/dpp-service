@@ -22,4 +22,8 @@ class SaveWithJarParm {
     var appParams: String? = null
     var appMainClass: String? = null
     var fv: String? = null
+    var containerType:Int? = 2
+    var jm:Int? = null
+    var tm:Int?=null
+    var ys:Int? = null
 }

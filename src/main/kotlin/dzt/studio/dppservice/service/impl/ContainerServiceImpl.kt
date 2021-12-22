@@ -58,6 +58,10 @@ class ContainerServiceImpl : ContainerService {
         return dppContainerInfoDao!!.getList()
     }
 
+    override fun getFvList(): List<String> {
+        return dppContainerInfoDao!!.getFvList()
+    }
+
     private fun getPageInfo(pageRequest: PageRequest): PageInfo<DppContainerInfo> {
         val pageNum = pageRequest.pageNum
         val pageSize = pageRequest.pageSize

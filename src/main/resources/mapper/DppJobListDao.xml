@@ -382,7 +382,11 @@
                djc.restart_strategy_count   AS restartStrategyCount,
                djc.restart_strategy_time    AS restartStrategyTime,
                djl.enable_schedule          as enableSchedule,
-               dci.container_msg            as containerMsg
+               dci.container_msg            as containerMsg,
+               djc.container_type           as containerType,
+               djc.jm as jm,
+               djc.tm as tm,
+               djc.ys as ys
         FROM dpp_job_list djl
                  LEFT JOIN dpp_job_config djc
                            on djl.id = djc.job_id

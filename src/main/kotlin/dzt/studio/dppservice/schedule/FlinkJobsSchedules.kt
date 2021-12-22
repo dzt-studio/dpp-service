@@ -32,7 +32,7 @@ class FlinkJobsSchedules {
     @Autowired
     var dppJobListDAO: DppJobListDao? = null
 
-    @Scheduled(cron = "0/10 * * * * ?")
+    @Scheduled(cron = "0/15 * * * * ?")
     fun jobStatus() {
         val restTemplate = RestTemplate()
         val containerJobInfo = dppContainerInfoDAO!!.getJobIdWithUrl()
@@ -61,10 +61,12 @@ class FlinkJobsSchedules {
                 if (!e.localizedMessage.contains("404 Not Found")) {
                     logger.error(e.localizedMessage)
                 }
-                val dppJobList = DppJobList()
-                dppJobList.id = it.jobId
-                dppJobList.jobStatus = JobStatus.FINISHED.toString()
-                dppJobListDAO!!.updateByPrimaryKeySelective(dppJobList)
+                if(it.jobStatus != "BUILDING"){
+                    val dppJobList = DppJobList()
+                    dppJobList.id = it.jobId
+                    dppJobList.jobStatus = JobStatus.FINISHED.toString()
+                    dppJobListDAO!!.updateByPrimaryKeySelective(dppJobList)
+                }
             }
         }
     }

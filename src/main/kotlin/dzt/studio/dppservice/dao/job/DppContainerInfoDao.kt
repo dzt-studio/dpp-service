@@ -10,4 +10,8 @@ interface DppContainerInfoDao : MyBatisBaseDao<DppContainerInfo, String>{
     fun getJobIdWithUrl():List<ContainerJobInfo>
 
     fun getList():List<DppContainerInfo>
+
+    fun getFvList():List<String>
+
+    fun deleteByContainerId(containerId:String)
 }

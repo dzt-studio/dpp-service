@@ -51,18 +51,23 @@
             useGeneratedKeys="true">
         insert into "dpp_job_config" (parallelism, checkpoint_enable, checkpoint_interval,
                                       restart_strategy_count, restart_strategy_time,
-                                      sql_details, job_id)
+                                      sql_details, job_id,jm,tm,container_type,ys)
         values (#{parallelism,jdbcType=INTEGER}, #{checkpointEnable,jdbcType=BOOLEAN},
                 #{checkpointInterval,jdbcType=INTEGER},
                 #{restartStrategyCount,jdbcType=SMALLINT}, #{restartStrategyTime,jdbcType=INTEGER},
-                #{sqlDetails,jdbcType=VARCHAR}, #{jobId,jdbcType=VARCHAR})
+                #{sqlDetails,jdbcType=VARCHAR}, #{jobId,jdbcType=VARCHAR},#{jm,jdbcType=INTEGER},#{tm,jdbcType=INTEGER}
+                   ,#{containerType,jdbcType=INTEGER},#{ys,jdbcType=INTEGER})
         ON CONFLICT(job_id) do update set parallelism            = EXCLUDED.parallelism,
                                           checkpoint_enable      = EXCLUDED.checkpoint_enable,
                                           checkpoint_interval    = EXCLUDED.checkpoint_interval,
                                           restart_strategy_count = EXCLUDED.restart_strategy_count,
                                           restart_strategy_time  = EXCLUDED.restart_strategy_time,
                                           sql_details            = EXCLUDED.sql_details,
-                                          job_id               = EXCLUDED.job_id
+                                          job_id               = EXCLUDED.job_id,
+                                           jm               = EXCLUDED.jm,
+                                           tm               = EXCLUDED.tm,
+                                           container_type               = EXCLUDED.container_type,
+                                           ys               = EXCLUDED.ys
     </insert>
     <insert id="insertSelective" keyColumn="id" keyProperty="id"
             parameterType="dzt.studio.dppservice.domain.job.DppJobConfig" useGeneratedKeys="true">

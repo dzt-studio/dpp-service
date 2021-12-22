@@ -45,4 +45,12 @@ class DppJobConfig: Serializable {
      * 任务id
      */
     var jobId: String? = null
+
+    var jm:Int? = null
+
+    var tm:Int? = null
+
+    var ys:Int? = null
+
+    var containerType:Int? = null
 }

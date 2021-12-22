@@ -6,7 +6,7 @@ plugins {
 }
 
 group = "dzt.studio"
-version = "0.0.1-incubation"
+version = "0.2.1-incubation"
 java.sourceCompatibility = JavaVersion.VERSION_11
 repositories {
     mavenLocal()

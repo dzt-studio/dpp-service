@@ -85,5 +85,7 @@ class DppJobList : Serializable {
 
     var updatedAt: Date? = null
     var appId: String? = null
+
+    var containerType:Int? =null
     private val serialVersionUID = 1L
 }
