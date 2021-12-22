@@ -108,13 +108,14 @@
         where id = #{id,jdbcType=VARCHAR}
     </update>
     <resultMap id="ContainerJobInfoResultMap" type="dzt.studio.dppservice.domain.job.ContainerJobInfo">
+        <result column="container_id" jdbcType="VARCHAR" property="containerId" />
         <result column="container_url" jdbcType="VARCHAR" property="containerUrl" />
         <result column="app_id" jdbcType="VARCHAR" property="appId" />
         <result column="id" jdbcType="VARCHAR" property="jobId" />
         <result column="job_status" jdbcType="VARCHAR" property="jobStatus" />
     </resultMap>
     <select id="getJobIdWithUrl" resultMap="ContainerJobInfoResultMap">
-        select dci.container_url as container_url, djl.app_id as app_id, djl.job_status as job_status,djl.id as id
+        select dci.container_id as container_id, dci.container_url as container_url, djl.app_id as app_id, djl.job_status as job_status,djl.id as id
         from dpp_container_info dci
                  LEFT JOIN dpp_job_list djl on dci.container_id = djl.container_id
         where djl.app_id is not null

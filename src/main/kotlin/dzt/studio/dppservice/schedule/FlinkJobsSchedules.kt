@@ -60,6 +60,9 @@ class FlinkJobsSchedules {
             } catch (e: Exception) {
                 if (!e.localizedMessage.contains("404 Not Found")) {
                     logger.error(e.localizedMessage)
+                    if(it.jobStatus == "FINISHED"){
+                        it.containerId?.let { it1 -> dppContainerInfoDAO!!.deleteByContainerId(it1) }
+                    }
                 }
                 if(it.jobStatus != "BUILDING"){
                     val dppJobList = DppJobList()
