@@ -28,5 +28,7 @@ class DppContainerInfo: Serializable {
 
     var tm:Int? =null
 
+    var ctype:String? = null
+
     private val serialVersionUID = 1L
 }

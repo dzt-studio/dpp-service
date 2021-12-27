@@ -22,4 +22,14 @@ class ContainerJobInfo: Serializable {
     var jobStatus: String? = null
 
     var jobId:String? = null
+
+    var warningEnable:Boolean = false
+
+    var warnType:String? = null
+
+    var warnTo:String? = null
+
+    var jobName:String? =null
+
+    var containerType:Int? = null
 }

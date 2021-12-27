@@ -386,7 +386,11 @@
                djc.container_type           as containerType,
                djc.jm as jm,
                djc.tm as tm,
-               djc.ys as ys
+               djc.ys as ys,
+               djc.warning_enable AS enableWarning,
+               djc.warning_config ->>'warnType' as warnType,
+               djc.warning_config ->>'warnTo' as warnTo,
+               dci.c_type as ctype
         FROM dpp_job_list djl
                  LEFT JOIN dpp_job_config djc
                            on djl.id = djc.job_id

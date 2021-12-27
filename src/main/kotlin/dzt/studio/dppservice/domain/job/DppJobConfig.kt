@@ -8,7 +8,7 @@ import java.io.Serializable
  * @Author dzt
  * @Date 2021-05-13 17:03
  */
-class DppJobConfig: Serializable {
+class DppJobConfig : Serializable {
     var id: String? = null
 
     /**
@@ -46,11 +46,18 @@ class DppJobConfig: Serializable {
      */
     var jobId: String? = null
 
-    var jm:Int? = null
+    var jm: Int? = null
 
-    var tm:Int? = null
+    var tm: Int? = null
 
-    var ys:Int? = null
+    var ys: Int? = null
 
-    var containerType:Int? = null
+    var containerType: Int? = null
+    var warningEnable: Boolean = false
+    var warningConfig: WarningConfig? = null
 }
+
+data class WarningConfig(
+    var warnType: String?,
+    var warnTo: String?
+)

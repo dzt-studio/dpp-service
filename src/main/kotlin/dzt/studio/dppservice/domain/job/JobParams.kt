@@ -77,4 +77,10 @@ class JobParams {
     var jm:Int? = null
     var tm:Int?=null
     var ys:Int? = null
+    var enableWarning:Boolean = false
+    var warnType:String? = null
+    var dingTokenId:String? = null
+    var emailAdd:String? = null
+    var warnTo:String? = null
+    var ctype:String? = null
 }

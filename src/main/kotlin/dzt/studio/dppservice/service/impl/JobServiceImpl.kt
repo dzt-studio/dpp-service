@@ -117,6 +117,16 @@ class JobServiceImpl : JobService {
 
     override fun getJobInfo(jobName: String): JobParams? {
         val jobParams = dppJobListDAO?.getJobInfo(jobName)
+        if (jobParams!!.enableWarning) {
+            when (jobParams.warnType) {
+                "钉钉" -> {
+                    jobParams.dingTokenId = jobParams.warnTo
+                }
+                "邮件" -> {
+                    jobParams.emailAdd = jobParams.warnTo
+                }
+            }
+        }
         return jobParams
     }
 
@@ -167,14 +177,33 @@ class JobServiceImpl : JobService {
             paramsJson = paramsJson.replace("`", "\\`")
             when (config.containerType) {
                 1 -> {
-                    val command = if (!config.lastCheckPointAddress.isNullOrBlank()) {
-                        CommandUtils.runCommand(
-                            config.fv!!,
-                            config.containerId!!,
-                            config.lastCheckPointAddress!!
-                        ) + " $paramsJson 2>&1"
-                    } else {
-                        CommandUtils.runCommand(config.fv!!, config.containerId!!) + " $paramsJson 2>&1"
+                    var command = ""
+                    when (config.ctype) {
+                        "yarn" -> {
+                            command = if (!config.lastCheckPointAddress.isNullOrBlank()) {
+                                CommandUtils.runCommand(
+                                    config.fv!!,
+                                    config.containerId!!,
+                                    config.lastCheckPointAddress!!
+                                ) + " $paramsJson 2>&1"
+                            } else {
+                                CommandUtils.runCommand(config.fv!!, config.containerId!!) + " $paramsJson 2>&1"
+                            }
+                        }
+                        "docker" -> {
+                            command = if (!config.lastCheckPointAddress.isNullOrBlank()) {
+                                CommandUtils.runDockerSqlCommand(
+                                    config.fv!!,
+                                    config.containerId!!,
+                                    config.lastCheckPointAddress!!
+                                ) + " $paramsJson 2>&1"
+                            } else {
+                                CommandUtils.runDockerSqlCommand(
+                                    config.fv!!,
+                                    config.containerId!!
+                                ) + " $paramsJson 2>&1"
+                            }
+                        }
                     }
                     logger.info(command)
                     val sshRegisterEntity = osEntity?.let { SSHRegister(it) }
@@ -280,16 +309,26 @@ class JobServiceImpl : JobService {
 
     override fun jobStop(jobId: String): Boolean {
         val jobInfo = dppJobListDAO?.selectByPrimaryKey(jobId)
-        val containerType = dppJobListDAO?.getJobInfo(jobInfo?.jobName!!)?.containerType
-        val command = CommandUtils.cancelCommand(jobInfo?.fv!!, jobInfo.appId!!, jobInfo.containerId!!)
+        val jobConfig = dppJobListDAO?.getJobInfo(jobInfo?.jobName!!)
+        val containerType = jobConfig!!.containerType
+        val ctype = jobConfig.ctype
+        var command = ""
+        when (ctype) {
+            "yarn" -> {
+                command = CommandUtils.cancelCommand(jobInfo?.fv!!, jobInfo.appId!!, jobInfo.containerId!!)
+            }
+            "docker" -> {
+                command = CommandUtils.cancelCommand(jobInfo!!.appId!!, jobInfo.containerId!!)
+            }
+        }
         val sshRegisterEntity = osEntity?.let { SSHRegister(it) }
         val r = sshRegisterEntity?.exec(command)
         if (r!!.contains("Cancelled job")) {
-            jobInfo.jobStatus = JobStatus.CANCELED.toString()
+            jobInfo?.jobStatus = JobStatus.CANCELED.toString()
             if (containerType == 2) {
-                dppContainerInfoDao?.deleteByContainerId(jobInfo.containerId!!)
+                dppContainerInfoDao?.deleteByContainerId(jobInfo?.containerId!!)
             }
-            dppJobListDAO!!.updateByPrimaryKeySelective(jobInfo)
+            dppJobListDAO!!.updateByPrimaryKeySelective(jobInfo!!)
         }
         return r.contains("Cancelled job")
     }
@@ -329,24 +368,48 @@ class JobServiceImpl : JobService {
             var command = ""
             when (config?.containerType) {
                 1 -> {
-                    if (config.jarName != null) {
-                        command = if (!config.lastCheckPointAddress.isNullOrBlank()) {
-                            CommandUtils.runWithAppCommand(
-                                config.mainClass!!,
-                                config.containerId!!,
-                                config.jarName!!,
-                                config.appParams,
-                                config.lastCheckPointAddress!!,
-                                config.fv!!
-                            )
-                        } else {
-                            CommandUtils.runWithAppCommand(
-                                config.mainClass!!,
-                                config.containerId!!,
-                                config.jarName!!,
-                                config.appParams,
-                                config.fv!!
-                            )
+                    when (config.ctype) {
+                        "yarn" -> {
+                            if (config.jarName != null) {
+                                command = if (!config.lastCheckPointAddress.isNullOrBlank()) {
+                                    CommandUtils.runWithAppCommand(
+                                        config.mainClass!!,
+                                        config.containerId!!,
+                                        config.jarName!!,
+                                        config.appParams,
+                                        config.lastCheckPointAddress!!,
+                                        config.fv!!
+                                    )
+                                } else {
+                                    CommandUtils.runWithAppCommand(
+                                        config.mainClass!!,
+                                        config.containerId!!,
+                                        config.jarName!!,
+                                        config.appParams,
+                                        config.fv!!
+                                    )
+                                }
+                            }
+                        }
+                        "docker" -> {
+                            if (config.jarName != null) {
+                                command = if (!config.lastCheckPointAddress.isNullOrBlank()) {
+                                    CommandUtils.runDockerJarCommand(
+                                        config.mainClass!!,
+                                        config.containerId!!,
+                                        config.jarName!!,
+                                        config.appParams,
+                                        config.lastCheckPointAddress!!,
+                                    )
+                                } else {
+                                    CommandUtils.runDockerJarCommand(
+                                        config.mainClass!!,
+                                        config.containerId!!,
+                                        config.jarName!!,
+                                        config.appParams,
+                                    )
+                                }
+                            }
                         }
                     }
                 }
@@ -378,6 +441,7 @@ class JobServiceImpl : JobService {
                 }
 
             }
+            logger.info(command)
             val sshRegisterEntity = osEntity?.let { SSHRegister(it) }
             val dppJobList = DppJobList()
             dppJobList.id = config?.jobId
@@ -393,10 +457,10 @@ class JobServiceImpl : JobService {
                     dppJobList.appId = appId
                     dppJobList.jobStatus = JobStatus.RUNNING.toString()
                     dppJobList.startTime = Date()
-                    if(config?.containerType==1){
+                    if (config?.containerType == 1) {
                         dppJobList.containerId = config.containerId
                     }
-                    if(config?.containerType==2){
+                    if (config?.containerType == 2) {
                         val yid = r.split("Submitted application ")[1].split(" ")[0].split("\n")[0]
                         val webUI = r.split("Found Web Interface ")[1].split(" ")[0]
                         dppJobList.containerId = yid
@@ -508,6 +572,18 @@ class JobServiceImpl : JobService {
             dppJobConfig.jm = params.jm
             dppJobConfig.tm = params.tm
             dppJobConfig.ys = params.ys
+        }
+        if (params.enableWarning) {
+            dppJobConfig.warningEnable = params.enableWarning
+            val warnTo = if (params.warnType == "钉钉") {
+                params.dingTokenId
+            } else {
+                params.emailAdd
+            }
+            dppJobConfig.warningConfig = WarningConfig(
+                warnType = params.warnType,
+                warnTo = warnTo
+            )
         }
         dppJobListDAO!!.upsert(dppJobList)
         dppJobConfigDao!!.upsert(dppJobConfig)

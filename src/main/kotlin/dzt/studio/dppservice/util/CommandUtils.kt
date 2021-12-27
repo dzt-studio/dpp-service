@@ -20,6 +20,10 @@ object CommandUtils {
         return "/data/flink/$fv/bin/flink cancel $jobId -yid  $containerId"
     }
 
+    fun cancelCommand(jobId: String, containerId: String): String {
+        return "docker exec -i '$containerId' flink cancel $jobId"
+    }
+
     fun runWithAppCommand(
         mainClass: String,
         containerId: String,
@@ -74,5 +78,31 @@ object CommandUtils {
         return "/data/flink/$fv/bin/flink run -m yarn-cluster -yjm $jm -ytm $tm -ys $ys  -d -c  $mainClass  /data/flink/jar/jobs/$jarName $params  2>&1"
     }
 
+    fun runDockerSqlCommand(fv: String, containerId: String, checkpointpath: String): String {
+        return "docker exec  -i '$containerId' flink run -d -c dzt.studio.dppplugin.FlinkSqlPlugin --allowNonRestoredState -s $checkpointpath /data/flink/$fv/jar/dpp-plugin.jar"
+    }
+
+    fun runDockerSqlCommand(fv: String, containerId: String): String {
+        return "docker exec  -i '$containerId' flink run -d -c dzt.studio.dppplugin.FlinkSqlPlugin  /data/flink/$fv/jar/dpp-plugin.jar"
+    }
+
+    fun runDockerJarCommand(
+        mainClass: String,
+        containerId: String,
+        jarName: String,
+        params: String?
+    ): String {
+        return "docker exec  -i '$containerId' flink run -d -c $mainClass  /data/flink/jar/jobs/$jarName $params  2>&1"
+    }
+
+    fun runDockerJarCommand(
+        mainClass: String,
+        containerId: String,
+        jarName: String,
+        params: String?,
+        checkpointpath: String
+    ): String {
+        return "docker exec -i '$containerId' flink run -d -c $mainClass  --allowNonRestoredState -s $checkpointpath /data/flink/jar/jobs/$jarName $params  2>&1"
+    }
 
 }
