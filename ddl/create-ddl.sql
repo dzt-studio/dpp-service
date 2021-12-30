@@ -187,3 +187,12 @@ VALUES('b778bea0-9fb8-43ac-9bd1-0d75adc19e08', 'built-in', 'built-in', 'built-in
 INSERT INTO public.dpp_container_info
 (id, container_id, container_name, container_url, container_msg, container_version, container_type, jm, tm)
 VALUES('a89b49da-79d4-43b6-8237-663dc763d473', 'built-in', 'built-in', 'built-in', 'built-in', 'flink-1.10.0', 2, NULL, NULL);
+
+alter table dpp_job_config add column warning_enable  bool;
+comment on column dpp_job_config.warning_enable is  '是否开启报警';
+
+alter table dpp_job_config add column warning_config jsonb;
+comment on column dpp_job_config.warning_config is  '报警配置';
+
+alter table dpp_container_info add column c_type text;
+comment on column dpp_container_info.c_type is  '容器类型(yarn，docker)';
