@@ -1,14 +1,12 @@
 package dzt.studio.dppservice.service.impl
 
+import akka.util.Switch
 import com.alibaba.fastjson.JSON
 import com.github.pagehelper.PageHelper
 import com.github.pagehelper.PageInfo
 import com.jcraft.jsch.ChannelSftp
 import dzt.studio.dppservice.config.SSHRegister
-import dzt.studio.dppservice.dao.job.DppAppJarsDao
-import dzt.studio.dppservice.dao.job.DppJobConfigDao
-import dzt.studio.dppservice.dao.job.DppJobListDao
-import dzt.studio.dppservice.dao.job.DppJobLogDao
+import dzt.studio.dppservice.dao.job.*
 import dzt.studio.dppservice.domain.OSEntity
 import dzt.studio.dppservice.domain.job.*
 import dzt.studio.dppservice.service.JobService
@@ -16,6 +14,7 @@ import dzt.studio.dppservice.util.*
 import org.apache.flink.table.api.EnvironmentSettings
 import org.apache.flink.table.api.TableException
 import org.apache.flink.table.api.internal.TableEnvironmentImpl
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
@@ -45,6 +44,9 @@ class JobServiceImpl : JobService {
     var dppJobConfigDao: DppJobConfigDao? = null
 
     @Autowired
+    var dppContainerInfoDao: DppContainerInfoDao? = null
+
+    @Autowired
     var dppJobLogDao: DppJobLogDao? = null
 
     @Autowired
@@ -57,6 +59,8 @@ class JobServiceImpl : JobService {
     var tokenUtils: TokenUtils? = null
 
     final var threadpool: ThreadPoolExecutor? = null
+
+    val logger = LoggerFactory.getLogger(this.javaClass)
 
     init {
         threadpool = ThreadPoolExecutor(10, 10, 1, TimeUnit.MINUTES, SynchronousQueue())
@@ -75,6 +79,10 @@ class JobServiceImpl : JobService {
         }
     }
 
+    override fun handleFilter(params: FilterParams): PageResult? {
+        return params.let { getFilterPageInfo(it).let { PageUtils.getPageResult(params, it) } }
+    }
+
     override fun saveJarApp(params: SaveWithJarParm): Boolean {
         var dppJobList = params.jobName?.let { dppJobListDAO!!.selectByJobName(it) }
         if (dppJobList == null) {
@@ -87,8 +95,20 @@ class JobServiceImpl : JobService {
         dppJobList.appParams = params.appParams
         dppJobList.mainClass = params.appMainClass
         dppJobList.fv = params.fv
+        var dppJobConfig = dppJobList.id?.let { dppJobConfigDao?.selectByJobId(it) }
+        if (dppJobConfig == null) {
+            dppJobConfig = DppJobConfig()
+        }
+        dppJobConfig.jobId = dppJobList.id
+        dppJobConfig.containerType = params.containerType
+        if (params.containerType == 2) {
+            dppJobConfig.jm = params.jm
+            dppJobConfig.tm = params.tm
+            dppJobConfig.ys = params.ys
+        }
         return try {
             dppJobListDAO!!.upsert(dppJobList)
+            dppJobConfigDao!!.upsert(dppJobConfig)
             true
         } catch (e: Exception) {
             false
@@ -96,7 +116,18 @@ class JobServiceImpl : JobService {
     }
 
     override fun getJobInfo(jobName: String): JobParams? {
-        return dppJobListDAO?.getJobInfo(jobName)
+        val jobParams = dppJobListDAO?.getJobInfo(jobName)
+        if (jobParams!!.enableWarning) {
+            when (jobParams.warnType) {
+                "钉钉" -> {
+                    jobParams.dingTokenId = jobParams.warnTo
+                }
+                "邮件" -> {
+                    jobParams.emailAdd = jobParams.warnTo
+                }
+            }
+        }
+        return jobParams
     }
 
     @Transactional
@@ -143,47 +174,131 @@ class JobServiceImpl : JobService {
             }
             config?.restartStrategyTime = config?.restartStrategyTime!! * 1000
             var paramsJson = JSON.toJSONString(JSON.toJSONString(config))
-            paramsJson = paramsJson.replace( "`","\\`")
-            val command = if (!config.lastCheckPointAddress.isNullOrBlank()) {
-                CommandUtils.runCommand(
-                    config.fv!!,
-                    config.containerId!!,
-                    config.lastCheckPointAddress!!
-                ) + " $paramsJson 2>&1"
-            } else {
-                CommandUtils.runCommand(config.fv!!, config.containerId!!) + " $paramsJson 2>&1"
-            }
-            val sshRegisterEntity = osEntity?.let { SSHRegister(it) }
+            paramsJson = paramsJson.replace("`", "\\`")
+            when (config.containerType) {
+                1 -> {
+                    var command = ""
+                    when (config.ctype) {
+                        "yarn" -> {
+                            command = if (!config.lastCheckPointAddress.isNullOrBlank()) {
+                                CommandUtils.runCommand(
+                                    config.fv!!,
+                                    config.containerId!!,
+                                    config.lastCheckPointAddress!!
+                                ) + " $paramsJson 2>&1"
+                            } else {
+                                CommandUtils.runCommand(config.fv!!, config.containerId!!) + " $paramsJson 2>&1"
+                            }
+                        }
+                        "docker" -> {
+                            command = if (!config.lastCheckPointAddress.isNullOrBlank()) {
+                                CommandUtils.runDockerSqlCommand(
+                                    config.fv!!,
+                                    config.containerId!!,
+                                    config.lastCheckPointAddress!!
+                                ) + " $paramsJson 2>&1"
+                            } else {
+                                CommandUtils.runDockerSqlCommand(
+                                    config.fv!!,
+                                    config.containerId!!
+                                ) + " $paramsJson 2>&1"
+                            }
+                        }
+                    }
+                    logger.info(command)
+                    val sshRegisterEntity = osEntity?.let { SSHRegister(it) }
 
-            val dppJobList = DppJobList()
-            dppJobList.id = config.jobId
-            dppJobList.jobStatus = JobStatus.BUILDING.toString()
-            dppJobListDAO!!.updateByPrimaryKeySelective(dppJobList)
-            threadpool?.execute {
-                val r = sshRegisterEntity?.exec(command)
-                if (r?.contains("Job has been submitted with JobID") == true) {
-                    val appId = r.split("Job has been submitted with JobID ")[1].trim()
                     val dppJobList = DppJobList()
                     dppJobList.id = config.jobId
-                    dppJobList.jobName = config.jobName
-                    dppJobList.appId = appId
-                    dppJobList.jobStatus = JobStatus.RUNNING.toString()
-                    dppJobList.startTime = Date()
-                    dppJobList.containerId = config.containerId
-                    dppJobList.enableSchedule = config.enableSchedule
+                    dppJobList.jobStatus = JobStatus.BUILDING.toString()
                     dppJobListDAO!!.updateByPrimaryKeySelective(dppJobList)
+                    threadpool?.execute {
+                        val r = sshRegisterEntity?.exec(command)
+                        if (r?.contains("Job has been submitted with JobID") == true) {
+                            val appId = r.split("Job has been submitted with JobID ")[1].trim()
+                            val dppJobList = DppJobList()
+                            dppJobList.id = config.jobId
+                            dppJobList.jobName = config.jobName
+                            dppJobList.appId = appId
+                            dppJobList.jobStatus = JobStatus.RUNNING.toString()
+                            dppJobList.startTime = Date()
+                            dppJobList.containerId = config.containerId
+                            dppJobList.enableSchedule = config.enableSchedule
+                            dppJobListDAO!!.updateByPrimaryKeySelective(dppJobList)
 
-                } else {
-                    val dppJobList = DppJobList()
-                    dppJobList.id = config.jobId
-                    dppJobList.jobStatus = JobStatus.FAILED.toString()
-                    dppJobListDAO!!.updateByPrimaryKeySelective(dppJobList)
+                        } else {
+                            val dppJobList = DppJobList()
+                            dppJobList.id = config.jobId
+                            dppJobList.jobStatus = JobStatus.FAILED.toString()
+                            dppJobListDAO!!.updateByPrimaryKeySelective(dppJobList)
+                        }
+                        val dppJobLog = DppJobLog(
+                            jobId = config.jobId,
+                            logInfo = r.toString()
+                        )
+                        dppJobLogDao?.upsert(dppJobLog)
+                    }
                 }
-                val dppJobLog = DppJobLog(
-                    jobId = config.jobId,
-                    logInfo = r.toString()
-                )
-                dppJobLogDao?.upsert(dppJobLog)
+                2 -> {
+                    val command = if (!config.lastCheckPointAddress.isNullOrBlank()) {
+                        CommandUtils.runPreJobOnYarn(
+                            config.fv!!,
+                            config.lastCheckPointAddress!!,
+                            config.jm!!,
+                            config.tm!!,
+                            config.ys!!
+                        ) + " $paramsJson 2>&1"
+                    } else {
+                        CommandUtils.runPreJobOnYarn(
+                            config.fv!!,
+                            config.jm!!,
+                            config.tm!!,
+                            config.ys!!
+                        ) + " $paramsJson 2>&1"
+                    }
+                    logger.info(command)
+                    val sshRegisterEntity = osEntity?.let { SSHRegister(it) }
+                    val dppJobList = DppJobList()
+                    dppJobList.id = config.jobId
+                    dppJobList.jobStatus = JobStatus.BUILDING.toString()
+                    dppJobListDAO!!.updateByPrimaryKeySelective(dppJobList)
+                    threadpool?.execute {
+                        val r = sshRegisterEntity?.exec(command)
+                        if (r?.contains("Job has been submitted with JobID") == true) {
+                            val appId = r.split("Job has been submitted with JobID ")[1].trim()
+                            val yid = r.split("Submitted application ")[1].split(" ")[0].split("\n")[0]
+                            val webUI = r.split("Found Web Interface ")[1].split(" ")[0]
+                            val dppJobList = DppJobList()
+                            dppJobList.id = config.jobId
+                            dppJobList.jobName = config.jobName
+                            dppJobList.appId = appId
+                            dppJobList.containerId = yid
+                            dppJobList.jobStatus = JobStatus.RUNNING.toString()
+                            dppJobList.startTime = Date()
+                            dppJobList.enableSchedule = config.enableSchedule
+                            dppJobListDAO!!.updateByPrimaryKeySelective(dppJobList)
+                            val dppContainerInfo = DppContainerInfo()
+                            dppContainerInfo.id = UUID.randomUUID().toString()
+                            dppContainerInfo.containerId = yid
+                            dppContainerInfo.containerType = 2
+                            dppContainerInfo.containerUrl = "http://$webUI"
+                            dppContainerInfo.containerVersion = config.fv
+                            dppContainerInfo.jm = config.jm
+                            dppContainerInfo.tm = config.tm
+                            dppContainerInfoDao?.insert(dppContainerInfo)
+                        } else {
+                            val dppJobList = DppJobList()
+                            dppJobList.id = config.jobId
+                            dppJobList.jobStatus = JobStatus.FAILED.toString()
+                            dppJobListDAO!!.updateByPrimaryKeySelective(dppJobList)
+                        }
+                        val dppJobLog = DppJobLog(
+                            jobId = config.jobId,
+                            logInfo = r.toString()
+                        )
+                        dppJobLogDao?.upsert(dppJobLog)
+                    }
+                }
             }
             true
         } catch (e: Exception) {
@@ -194,12 +309,26 @@ class JobServiceImpl : JobService {
 
     override fun jobStop(jobId: String): Boolean {
         val jobInfo = dppJobListDAO?.selectByPrimaryKey(jobId)
-        val command = CommandUtils.cancelCommand(jobInfo?.fv!!, jobInfo.appId!!, jobInfo.containerId!!)
+        val jobConfig = dppJobListDAO?.getJobInfo(jobInfo?.jobName!!)
+        val containerType = jobConfig!!.containerType
+        val ctype = jobConfig.ctype
+        var command = ""
+        when (ctype) {
+            "yarn" -> {
+                command = CommandUtils.cancelCommand(jobInfo?.fv!!, jobInfo.appId!!, jobInfo.containerId!!)
+            }
+            "docker" -> {
+                command = CommandUtils.cancelCommand(jobInfo!!.appId!!, jobInfo.containerId!!)
+            }
+        }
         val sshRegisterEntity = osEntity?.let { SSHRegister(it) }
         val r = sshRegisterEntity?.exec(command)
         if (r!!.contains("Cancelled job")) {
-            jobInfo.jobStatus = JobStatus.CANCELED.toString()
-            dppJobListDAO!!.updateByPrimaryKeySelective(jobInfo)
+            jobInfo?.jobStatus = JobStatus.CANCELED.toString()
+            if (containerType == 2) {
+                dppContainerInfoDao?.deleteByContainerId(jobInfo?.containerId!!)
+            }
+            dppJobListDAO!!.updateByPrimaryKeySelective(jobInfo!!)
         }
         return r.contains("Cancelled job")
     }
@@ -236,54 +365,127 @@ class JobServiceImpl : JobService {
         return try {
             val config = dppJobListDAO?.getJobInfo(jobName)
             var r = java.lang.StringBuilder()
-            if (config?.jarName != null) {
-                val command = if (!config.lastCheckPointAddress.isNullOrBlank()) {
-                    CommandUtils.runWithAppCommand(
-                        config.mainClass!!,
-                        config.containerId!!,
-                        config.jarName!!,
-                        config.appParams,
-                        config.lastCheckPointAddress!!,
-                        config.fv!!
-                    )
-                } else {
-                    CommandUtils.runWithAppCommand(
-                        config.mainClass!!,
-                        config.containerId!!,
-                        config.jarName!!,
-                        config.appParams,
-                        config.fv!!
-                    )
-                }
-                val sshRegisterEntity = osEntity?.let { SSHRegister(it) }
-                val dppJobList = DppJobList()
-                dppJobList.id = config.jobId
-                dppJobList.jobStatus = JobStatus.BUILDING.toString()
-                dppJobListDAO!!.updateByPrimaryKeySelective(dppJobList)
-                threadpool?.execute {
-                    r = sshRegisterEntity?.exec(command)!!
-                    if (r.contains("Job has been submitted with JobID")) {
-                        val appId = r.split("Job has been submitted with JobID ")[1].trim()
-                        val dppJobList = DppJobList()
-                        dppJobList.jobName = config.jobName
-                        dppJobList.id = config.jobId
-                        dppJobList.appId = appId
-                        dppJobList.jobStatus = JobStatus.RUNNING.toString()
-                        dppJobList.startTime = Date()
-                        dppJobList.containerId = config.containerId
-                        dppJobListDAO!!.updateByPrimaryKeySelective(dppJobList)
-                    } else {
-                        val dppJobList = DppJobList()
-                        dppJobList.id = config.jobId
-                        dppJobList.jobStatus = JobStatus.FAILED.toString()
-                        dppJobListDAO!!.updateByPrimaryKeySelective(dppJobList)
+            var command = ""
+            when (config?.containerType) {
+                1 -> {
+                    when (config.ctype) {
+                        "yarn" -> {
+                            if (config.jarName != null) {
+                                command = if (!config.lastCheckPointAddress.isNullOrBlank()) {
+                                    CommandUtils.runWithAppCommand(
+                                        config.mainClass!!,
+                                        config.containerId!!,
+                                        config.jarName!!,
+                                        config.appParams,
+                                        config.lastCheckPointAddress!!,
+                                        config.fv!!
+                                    )
+                                } else {
+                                    CommandUtils.runWithAppCommand(
+                                        config.mainClass!!,
+                                        config.containerId!!,
+                                        config.jarName!!,
+                                        config.appParams,
+                                        config.fv!!
+                                    )
+                                }
+                            }
+                        }
+                        "docker" -> {
+                            if (config.jarName != null) {
+                                command = if (!config.lastCheckPointAddress.isNullOrBlank()) {
+                                    CommandUtils.runDockerJarCommand(
+                                        config.mainClass!!,
+                                        config.containerId!!,
+                                        config.jarName!!,
+                                        config.appParams,
+                                        config.lastCheckPointAddress!!,
+                                    )
+                                } else {
+                                    CommandUtils.runDockerJarCommand(
+                                        config.mainClass!!,
+                                        config.containerId!!,
+                                        config.jarName!!,
+                                        config.appParams,
+                                    )
+                                }
+                            }
+                        }
                     }
-                    val dppJobLog = DppJobLog(
-                        jobId = config.jobId,
-                        logInfo = r.toString()
-                    )
-                    dppJobLogDao?.upsert(dppJobLog)
                 }
+                2 -> {
+                    if (config.jarName != null) {
+                        command = if (!config.lastCheckPointAddress.isNullOrBlank()) {
+                            CommandUtils.runPreJobWithApp(
+                                config.mainClass!!,
+                                config.jarName!!,
+                                config.appParams,
+                                config.lastCheckPointAddress!!,
+                                config.fv!!,
+                                config.jm!!,
+                                config.tm!!,
+                                config.ys!!
+                            )
+                        } else {
+                            CommandUtils.runPreJobWithApp(
+                                config.mainClass!!,
+                                config.jarName!!,
+                                config.appParams,
+                                config.fv!!,
+                                config.jm!!,
+                                config.tm!!,
+                                config.ys!!
+                            )
+                        }
+                    }
+                }
+
+            }
+            logger.info(command)
+            val sshRegisterEntity = osEntity?.let { SSHRegister(it) }
+            val dppJobList = DppJobList()
+            dppJobList.id = config?.jobId
+            dppJobList.jobStatus = JobStatus.BUILDING.toString()
+            dppJobListDAO!!.updateByPrimaryKeySelective(dppJobList)
+            threadpool?.execute {
+                r = sshRegisterEntity?.exec(command)!!
+                if (r.contains("Job has been submitted with JobID")) {
+                    val appId = r.split("Job has been submitted with JobID ")[1].trim()
+                    val dppJobList = DppJobList()
+                    dppJobList.jobName = config?.jobName
+                    dppJobList.id = config?.jobId
+                    dppJobList.appId = appId
+                    dppJobList.jobStatus = JobStatus.RUNNING.toString()
+                    dppJobList.startTime = Date()
+                    if (config?.containerType == 1) {
+                        dppJobList.containerId = config.containerId
+                    }
+                    if (config?.containerType == 2) {
+                        val yid = r.split("Submitted application ")[1].split(" ")[0].split("\n")[0]
+                        val webUI = r.split("Found Web Interface ")[1].split(" ")[0]
+                        dppJobList.containerId = yid
+                        val dppContainerInfo = DppContainerInfo()
+                        dppContainerInfo.id = UUID.randomUUID().toString()
+                        dppContainerInfo.containerId = yid
+                        dppContainerInfo.containerType = 2
+                        dppContainerInfo.containerUrl = "http://$webUI"
+                        dppContainerInfo.containerVersion = config.fv
+                        dppContainerInfo.jm = config.jm
+                        dppContainerInfo.tm = config.tm
+                        dppContainerInfoDao?.insert(dppContainerInfo)
+                    }
+                    dppJobListDAO!!.updateByPrimaryKeySelective(dppJobList)
+                } else {
+                    val dppJobList = DppJobList()
+                    dppJobList.id = config?.jobId
+                    dppJobList.jobStatus = JobStatus.FAILED.toString()
+                    dppJobListDAO!!.updateByPrimaryKeySelective(dppJobList)
+                }
+                val dppJobLog = DppJobLog(
+                    jobId = config?.jobId,
+                    logInfo = r.toString()
+                )
+                dppJobLogDao?.upsert(dppJobLog)
             }
             true
         } catch (e: Exception) {
@@ -324,6 +526,14 @@ class JobServiceImpl : JobService {
         return PageInfo<DppJobList>(jobList)
     }
 
+    private fun getFilterPageInfo(params: FilterParams): PageInfo<DppJobList> {
+        val pageNum = params.pageNum
+        val pageSize = params.pageSize
+        PageHelper.startPage<Any>(pageNum, pageSize)
+        val jobList = dppJobListDAO!!.selectByParams(params)
+        return PageInfo<DppJobList>(jobList)
+    }
+
     /**
      * 保存任务
      */
@@ -357,6 +567,24 @@ class JobServiceImpl : JobService {
         dppJobConfig.restartStrategyTime = params.restartStrategyTime
         dppJobConfig.sqlDetails = params.flinkSql
         dppJobConfig.jobId = dppJobList.id
+        dppJobConfig.containerType = params.containerType
+        if (params.containerType == 2) {
+            dppJobConfig.jm = params.jm
+            dppJobConfig.tm = params.tm
+            dppJobConfig.ys = params.ys
+        }
+        if (params.enableWarning) {
+            dppJobConfig.warningEnable = params.enableWarning
+            val warnTo = if (params.warnType == "钉钉") {
+                params.dingTokenId
+            } else {
+                params.emailAdd
+            }
+            dppJobConfig.warningConfig = WarningConfig(
+                warnType = params.warnType,
+                warnTo = warnTo
+            )
+        }
         dppJobListDAO!!.upsert(dppJobList)
         dppJobConfigDao!!.upsert(dppJobConfig)
     }

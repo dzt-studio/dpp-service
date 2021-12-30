@@ -351,6 +351,20 @@
         from "dpp_job_list"
         order by start_time desc
     </select>
+    <select id="selectByParams" parameterType="dzt.studio.dppservice.domain.job.FilterParams" resultMap="BaseResultMap">
+        select
+        <include refid="Base_Column_List"/>
+        from "dpp_job_list"
+        <where>
+            <if test="jobStatus != null and jobStatus != ''">
+                job_status = #{jobStatus,jdbcType=VARCHAR}
+            </if>
+            <if test="jobName != null and jobName != '' ">
+                and job_name like CONCAT('%',#{jobName,jdbcType=VARCHAR},'%')
+            </if>
+        </where>
+        order by start_time desc
+    </select>
     <select id="getJobInfo" parameterType="java.lang.String" resultType="dzt.studio.dppservice.domain.job.JobParams">
         SELECT djl.id                       as jobId,
                djl.job_name                 AS jobName,
@@ -368,7 +382,15 @@
                djc.restart_strategy_count   AS restartStrategyCount,
                djc.restart_strategy_time    AS restartStrategyTime,
                djl.enable_schedule          as enableSchedule,
-               dci.container_msg            as containerMsg
+               dci.container_msg            as containerMsg,
+               djc.container_type           as containerType,
+               djc.jm as jm,
+               djc.tm as tm,
+               djc.ys as ys,
+               djc.warning_enable AS enableWarning,
+               djc.warning_config ->>'warnType' as warnType,
+               djc.warning_config ->>'warnTo' as warnTo,
+               dci.c_type as ctype
         FROM dpp_job_list djl
                  LEFT JOIN dpp_job_config djc
                            on djl.id = djc.job_id

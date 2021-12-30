@@ -161,3 +161,38 @@ comment on table dpp_user is '用户表';
 insert into dpp_user (id, user_name, password, created_at, updated_at)
 values ('c7cb6921-b51f-4759-80cf-c1d766e8d01d','admin','123456','2021-06-21 08:44:33','2021-06-21 08:44:33'
 );
+
+alter table dpp_container_info add column container_type int;
+comment on column dpp_container_info.container_type is  '容器类型(1：共享，2：独享)';
+alter table dpp_container_info add column jm int;
+comment on column dpp_container_info.jm is  'jobmanager配置(MB)';
+alter table dpp_container_info add column tm int;
+comment on column dpp_container_info.tm is  'taskmanager配置(MB)';
+
+alter table dpp_job_config add column jm int;
+comment on column dpp_job_config.jm is  'jobmanager配置(MB)';
+alter table dpp_job_config add column tm int;
+comment on column dpp_job_config.tm is  'taskmanager配置(MB)';
+
+alter table dpp_job_config add column container_type int;
+comment on column dpp_job_config.container_type is  '容器类型(1：共享，2：独享)';
+
+alter table dpp_job_config add column ys int;
+comment on column dpp_job_config.ys is  'tm solt数';
+
+INSERT INTO public.dpp_container_info
+(id, container_id, container_name, container_url, container_msg, container_version, container_type, jm, tm)
+VALUES('b778bea0-9fb8-43ac-9bd1-0d75adc19e08', 'built-in', 'built-in', 'built-in', 'built-in', 'flink-1.13.1', 2, NULL, NULL);
+
+INSERT INTO public.dpp_container_info
+(id, container_id, container_name, container_url, container_msg, container_version, container_type, jm, tm)
+VALUES('a89b49da-79d4-43b6-8237-663dc763d473', 'built-in', 'built-in', 'built-in', 'built-in', 'flink-1.10.0', 2, NULL, NULL);
+
+alter table dpp_job_config add column warning_enable  bool;
+comment on column dpp_job_config.warning_enable is  '是否开启报警';
+
+alter table dpp_job_config add column warning_config jsonb;
+comment on column dpp_job_config.warning_config is  '报警配置';
+
+alter table dpp_container_info add column c_type text;
+comment on column dpp_container_info.c_type is  '容器类型(yarn，docker)';

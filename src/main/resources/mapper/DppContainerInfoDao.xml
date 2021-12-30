@@ -8,9 +8,14 @@
         <result column="container_url" jdbcType="VARCHAR" property="containerUrl"/>
         <result column="container_msg" jdbcType="VARCHAR" property="containerMsg"/>
         <result column="container_version" jdbcType="VARCHAR" property="containerVersion"/>
+        <result column="container_type" jdbcType="INTEGER" property="containerType"/>
+        <result column="jm" jdbcType="INTEGER" property="jm"/>
+        <result column="tm" jdbcType="INTEGER" property="tm"/>
+        <result column="c_type" jdbcType="VARCHAR" property="ctype"/>
     </resultMap>
     <sql id="Base_Column_List">
-        id, container_id, container_name, container_url, container_msg, container_version
+        id
+        , container_id, container_name, container_url, container_msg, container_version,c_type
     </sql>
     <select id="selectByPrimaryKey" parameterType="java.lang.String" resultMap="BaseResultMap">
         select
@@ -21,7 +26,7 @@
     <select id="selectAll" parameterType="java.lang.String" resultMap="BaseResultMap">
         select
         <include refid="Base_Column_List"/>
-        from "dpp_container_info"
+        from "dpp_container_info" where container_type = 1
     </select>
     <delete id="deleteByPrimaryKey" parameterType="java.lang.String">
         delete
@@ -30,10 +35,13 @@
     </delete>
     <insert id="insert" keyColumn="id" keyProperty="id"
             parameterType="dzt.studio.dppservice.domain.job.DppContainerInfo" useGeneratedKeys="true">
-        insert into "dpp_container_info" (id,container_id, container_name, container_url,
-                                          container_msg, container_version)
-        values (#{id,jdbcType=VARCHAR},#{containerId,jdbcType=VARCHAR}, #{containerName,jdbcType=VARCHAR}, #{containerUrl,jdbcType=VARCHAR},
-                #{containerMsg,jdbcType=VARCHAR}, #{containerVersion,jdbcType=VARCHAR})
+        insert into "dpp_container_info" (id, container_id, container_name, container_url,
+                                          container_msg, container_version, container_type, jm, tm,c_type)
+        values (#{id,jdbcType=VARCHAR}, #{containerId,jdbcType=VARCHAR}, #{containerName,jdbcType=VARCHAR},
+                #{containerUrl,jdbcType=VARCHAR},
+                #{containerMsg,jdbcType=VARCHAR}, #{containerVersion,jdbcType=VARCHAR},
+                #{containerType,jdbcType=INTEGER}
+                   , #{jm,jdbcType=INTEGER}, #{tm,jdbcType=INTEGER},#{ctype,jdbcType=VARCHAR})
     </insert>
     <insert id="insertSelective" keyColumn="id" keyProperty="id"
             parameterType="dzt.studio.dppservice.domain.job.DppContainerInfo" useGeneratedKeys="true">
@@ -100,25 +108,55 @@
             container_name    = #{containerName,jdbcType=VARCHAR},
             container_url     = #{containerUrl,jdbcType=VARCHAR},
             container_msg     = #{containerMsg,jdbcType=VARCHAR},
-            container_version = #{containerVersion,jdbcType=VARCHAR}
+            container_version = #{containerVersion,jdbcType=VARCHAR},
+            c_type = #{ctype,jdbcType=VARCHAR}
         where id = #{id,jdbcType=VARCHAR}
     </update>
     <resultMap id="ContainerJobInfoResultMap" type="dzt.studio.dppservice.domain.job.ContainerJobInfo">
-        <result column="container_url" jdbcType="VARCHAR" property="containerUrl" />
-        <result column="app_id" jdbcType="VARCHAR" property="appId" />
-        <result column="id" jdbcType="VARCHAR" property="jobId" />
-        <result column="job_status" jdbcType="VARCHAR" property="jobStatus" />
+        <result column="container_id" jdbcType="VARCHAR" property="containerId"/>
+        <result column="container_url" jdbcType="VARCHAR" property="containerUrl"/>
+        <result column="app_id" jdbcType="VARCHAR" property="appId"/>
+        <result column="id" jdbcType="VARCHAR" property="jobId"/>
+        <result column="job_status" jdbcType="VARCHAR" property="jobStatus"/>
+        <result column="warning_enable" jdbcType="BOOLEAN" property="warningEnable"/>
+        <result column="warn_type" jdbcType="VARCHAR" property="warnType"/>
+        <result column="warn_to" jdbcType="VARCHAR" property="warnTo"/>
+        <result column="job_name" jdbcType="VARCHAR" property="jobName"/>
+        <result column="container_type" jdbcType="INTEGER" property="containerType"/>
     </resultMap>
     <select id="getJobIdWithUrl" resultMap="ContainerJobInfoResultMap">
-        select dci.container_url as container_url, djl.app_id as app_id, djl.job_status as job_status,djl.id as id
+        select dci.container_id   as container_id,
+               dci.container_url  as container_url,
+               dci.container_type AS container_type,
+               djl.app_id         as app_id,
+               djl.job_status     as job_status,
+               djl.id             as id,
+               djc.warning_enable as warning_enable,
+               djc.warning_config ->>'warnType' as warn_type,
+            djc.warning_config ->>'warnTo' as warn_to,
+            djl.job_name as job_name
         from dpp_container_info dci
-                 LEFT JOIN dpp_job_list djl on dci.container_id = djl.container_id
+            LEFT JOIN dpp_job_list djl
+        on dci.container_id = djl.container_id
+            left join dpp_job_config djc
+            on djl.id = djc.job_id
         where djl.app_id is not null
     </select>
 
-    <select id="getList"  resultMap="BaseResultMap">
+    <select id="getList" resultMap="BaseResultMap">
         select
-        <include refid="Base_Column_List" />
+        <include refid="Base_Column_List"/>
+        from "dpp_container_info" where container_type = 1
+    </select>
+
+    <select id="getFvList" resultType="java.lang.String">
+        select distinct container_version
         from "dpp_container_info"
+    </select>
+
+    <select id="deleteByContainerId" parameterType="java.lang.String">
+        delete
+        from "dpp_container_info"
+        where container_id = #{containerId,jdbcType=VARCHAR}
     </select>
 </mapper>

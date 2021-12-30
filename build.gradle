@@ -6,7 +6,7 @@ plugins {
 }
 
 group = "dzt.studio"
-version = "0.0.1-incubation"
+version = "0.2.1-incubation"
 java.sourceCompatibility = JavaVersion.VERSION_11
 repositories {
     mavenLocal()
@@ -33,6 +33,7 @@ dependencies {
     implementation("javax.xml.bind:jaxb-api:2.3.1")
     implementation("com.jcraft:jsch:0.1.54")
     implementation("com.github.pagehelper:pagehelper-spring-boot-starter:1.2.5")
+    implementation("com.aliyun:alibaba-dingtalk-service-sdk:2.0.0")
     testImplementation("org.springframework.boot:spring-boot-starter-test")
 }
 

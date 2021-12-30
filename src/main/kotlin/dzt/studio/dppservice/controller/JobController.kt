@@ -1,5 +1,6 @@
 package dzt.studio.dppservice.controller
 
+import dzt.studio.dppservice.domain.job.FilterParams
 import dzt.studio.dppservice.domain.job.JobParams
 import dzt.studio.dppservice.domain.job.SaveWithJarParm
 import dzt.studio.dppservice.service.JobService
@@ -36,6 +37,11 @@ class JobController {
         } else {
             JSONResult(HttpCode.OK.code, "操作失败")
         }
+    }
+
+    @PostMapping("/filter")
+    fun handleFilter(@RequestBody params: FilterParams):JSONResult<Any>{
+        return JSONResult(HttpCode.OK.code, "操作成功", jobService!!.handleFilter(params))
     }
 
     @PostMapping("/create-and-save-with-jar")

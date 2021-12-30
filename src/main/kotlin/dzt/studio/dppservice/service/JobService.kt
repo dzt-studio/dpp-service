@@ -1,6 +1,7 @@
 package dzt.studio.dppservice.service
 
 import dzt.studio.dppservice.domain.job.DppAppJars
+import dzt.studio.dppservice.domain.job.FilterParams
 import dzt.studio.dppservice.domain.job.JobParams
 import dzt.studio.dppservice.domain.job.SaveWithJarParm
 import dzt.studio.dppservice.util.PageRequest
@@ -17,6 +18,8 @@ interface JobService {
      * 创建任务
      */
     fun createJob(params: JobParams):Boolean
+
+    fun handleFilter(params: FilterParams):PageResult?
 
     fun saveJarApp(params: SaveWithJarParm):Boolean
 

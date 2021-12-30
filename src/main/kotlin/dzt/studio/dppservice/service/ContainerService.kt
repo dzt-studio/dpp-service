@@ -14,4 +14,6 @@ interface ContainerService {
     fun updateContainer(dppContainerInfo: DppContainerInfo):Boolean
 
     fun getContainerList():List<DppContainerInfo>
+
+    fun getFvList():List<String>
 }

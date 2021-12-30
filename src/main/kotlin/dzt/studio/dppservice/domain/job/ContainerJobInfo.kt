@@ -9,6 +9,7 @@ import java.io.Serializable
  * @Date 2020-09-16 10:51
  */
 class ContainerJobInfo: Serializable {
+    var containerId:String? = null
     /**
      * 容器地址
      */
@@ -21,4 +22,14 @@ class ContainerJobInfo: Serializable {
     var jobStatus: String? = null
 
     var jobId:String? = null
+
+    var warningEnable:Boolean = false
+
+    var warnType:String? = null
+
+    var warnTo:String? = null
+
+    var jobName:String? =null
+
+    var containerType:Int? = null
 }

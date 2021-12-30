@@ -27,6 +27,11 @@ class ContainerController {
         return JSONResult(HttpCode.OK.code, "操作成功", containerService!!.getContainerList())
     }
 
+    @GetMapping("/list-fv")
+    fun fvList(): JSONResult<Any> {
+        return JSONResult(HttpCode.OK.code, "操作成功", containerService!!.getFvList())
+    }
+
     @PostMapping("/list")
     fun jobList(@RequestBody pageRequest: PageRequest): JSONResult<Any> {
         return JSONResult(HttpCode.OK.code, "操作成功", containerService!!.getList(pageRequest))
