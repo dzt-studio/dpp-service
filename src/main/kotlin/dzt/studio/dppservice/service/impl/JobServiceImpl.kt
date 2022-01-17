@@ -16,9 +16,11 @@ import org.apache.flink.table.api.TableException
 import org.apache.flink.table.api.internal.TableEnvironmentImpl
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import org.springframework.web.multipart.MultipartFile
+import java.io.File
 import java.util.*
 import java.util.concurrent.SynchronousQueue
 import java.util.concurrent.ThreadPoolExecutor
@@ -57,6 +59,9 @@ class JobServiceImpl : JobService {
 
     @Resource
     var tokenUtils: TokenUtils? = null
+
+    @Value("\${kube.config}")
+    private val KUBE_CONFIG: String? = null
 
     final var threadpool: ThreadPoolExecutor? = null
 
@@ -204,16 +209,38 @@ class JobServiceImpl : JobService {
                                 ) + " $paramsJson 2>&1"
                             }
                         }
+                        "k8s" -> {
+                            command = if (!config.lastCheckPointAddress.isNullOrBlank()) {
+                                CommandUtils.runK8sSqlCommand(
+                                    config.fv!!,
+                                    config.containerId!!,
+                                    config.lastCheckPointAddress!!
+                                ) + " $paramsJson"
+                            } else {
+                                CommandUtils.runK8sSqlCommand(
+                                    config.fv!!,
+                                    config.containerId!!
+                                ) + " $paramsJson"
+                            }
+                        }
                     }
                     logger.info(command)
-                    val sshRegisterEntity = osEntity?.let { SSHRegister(it) }
+
+                    var sshRegisterEntity: SSHRegister? = null
+                    if (config.ctype != "k8s") {
+                        sshRegisterEntity = osEntity?.let { SSHRegister(it) }
+                    }
 
                     val dppJobList = DppJobList()
                     dppJobList.id = config.jobId
                     dppJobList.jobStatus = JobStatus.BUILDING.toString()
                     dppJobListDAO!!.updateByPrimaryKeySelective(dppJobList)
                     threadpool?.execute {
-                        val r = sshRegisterEntity?.exec(command)
+                        val r = if (config.ctype == "k8s"){
+                            JavaExecCmd.execCmd(command)
+                        } else{
+                            sshRegisterEntity?.exec(command)
+                        }
                         if (r?.contains("Job has been submitted with JobID") == true) {
                             val appId = r.split("Job has been submitted with JobID ")[1].trim()
                             val dppJobList = DppJobList()
@@ -320,9 +347,19 @@ class JobServiceImpl : JobService {
             "docker" -> {
                 command = CommandUtils.cancelCommand(jobInfo!!.appId!!, jobInfo.containerId!!)
             }
+            "k8s"->{
+                command = CommandUtils.k8sCancelCommand(jobInfo?.fv!!, jobInfo.appId!!, jobInfo.containerId!!)
+            }
         }
-        val sshRegisterEntity = osEntity?.let { SSHRegister(it) }
-        val r = sshRegisterEntity?.exec(command)
+        var sshRegisterEntity: SSHRegister? = null
+        if (ctype != "k8s") {
+            sshRegisterEntity = osEntity?.let { SSHRegister(it) }
+        }
+        val r = if (ctype == "k8s") {
+            JavaExecCmd.execCmd(command)
+        } else {
+            sshRegisterEntity?.exec(command)
+        }
         if (r!!.contains("Cancelled job")) {
             jobInfo?.jobStatus = JobStatus.CANCELED.toString()
             if (containerType == 2) {
@@ -342,9 +379,24 @@ class JobServiceImpl : JobService {
     }
 
     override fun jarUpload(file: MultipartFile): Boolean {
-        val sf = XftpClientUtils()
-        val sftp: ChannelSftp = sf.connect(osEntity!!.host!!, osEntity!!.port, osEntity!!.user, osEntity!!.password)!!
-        val isload = sf.upload("/data/flink/jar/jobs/", file, sftp)
+        val isload = if (KUBE_CONFIG.isNullOrBlank()) {
+            val sf = XftpClientUtils()
+            val sftp: ChannelSftp = sf.connect(osEntity!!.host!!, osEntity!!.port, osEntity!!.user, osEntity!!.password)!!
+            sf.upload("/data/flink/jar/jobs/", file, sftp)
+        } else {
+            try {
+                val dir = File("/data/flink/jar/jobs/")
+                if (!dir.isDirectory){
+                    dir.mkdir()
+                }
+                file.transferTo(File("/data/flink/jar/jobs/" + file.originalFilename))
+                true
+            } catch (e: Exception) {
+                e.printStackTrace()
+                false
+            }
+        }
+
         if (isload) {
             var dppAppJars = dppAppJarsDao?.getInfo(file.originalFilename)
             if (dppAppJars == null) {
@@ -411,6 +463,28 @@ class JobServiceImpl : JobService {
                                 }
                             }
                         }
+                        "k8s" -> {
+                            if (config.jarName != null) {
+                                command = if (!config.lastCheckPointAddress.isNullOrBlank()) {
+                                    CommandUtils.runK8sJarCommand(
+                                        config.mainClass!!,
+                                        config.containerId!!,
+                                        config.jarName!!,
+                                        config.appParams,
+                                        config.lastCheckPointAddress!!,
+                                        config.fv!!
+                                    )
+                                } else {
+                                    CommandUtils.runK8sJarCommand(
+                                        config.mainClass!!,
+                                        config.containerId!!,
+                                        config.jarName!!,
+                                        config.appParams,
+                                        config.fv!!
+                                    )
+                                }
+                            }
+                        }
                     }
                 }
                 2 -> {
@@ -442,13 +516,20 @@ class JobServiceImpl : JobService {
 
             }
             logger.info(command)
-            val sshRegisterEntity = osEntity?.let { SSHRegister(it) }
+            var sshRegisterEntity: SSHRegister? = null
+            if (config?.ctype != "k8s") {
+                sshRegisterEntity = osEntity?.let { SSHRegister(it) }
+            }
             val dppJobList = DppJobList()
             dppJobList.id = config?.jobId
             dppJobList.jobStatus = JobStatus.BUILDING.toString()
             dppJobListDAO!!.updateByPrimaryKeySelective(dppJobList)
             threadpool?.execute {
-                r = sshRegisterEntity?.exec(command)!!
+                r = if (config?.ctype == "k8s") {
+                    JavaExecCmd.execCmd(command)
+                } else {
+                    sshRegisterEntity?.exec(command)!!
+                }
                 if (r.contains("Job has been submitted with JobID")) {
                     val appId = r.split("Job has been submitted with JobID ")[1].trim()
                     val dppJobList = DppJobList()

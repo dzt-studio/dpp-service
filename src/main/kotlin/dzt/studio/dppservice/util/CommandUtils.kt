@@ -24,6 +24,10 @@ object CommandUtils {
         return "docker exec -i '$containerId' flink cancel $jobId"
     }
 
+    fun k8sCancelCommand(fv: String, jobId: String, containerId: String): String {
+        return "/usr/local/lib/$fv/bin/flink cancel $jobId --target kubernetes-session -Dkubernetes.cluster-id=$containerId"
+    }
+
     fun runWithAppCommand(
         mainClass: String,
         containerId: String,
@@ -105,4 +109,32 @@ object CommandUtils {
         return "docker exec -i '$containerId' flink run -d -c $mainClass  --allowNonRestoredState -s $checkpointpath /data/flink/jar/jobs/$jarName $params  2>&1"
     }
 
+    fun runK8sSqlCommand(fv: String, containerId: String, checkpointpath: String): String {
+        return "/usr/local/lib/$fv/bin/flink run -d -c cn.z023.plugs.FlinkSqlPlugKt --allowNonRestoredState -s $checkpointpath --target kubernetes-session -Dkubernetes.cluster-id=$containerId /data/flink/jar/sql/dap-plug-k8s.jar"
+    }
+
+    fun runK8sSqlCommand(fv: String, containerId: String): String {
+        return "/usr/local/lib/$fv/bin/flink run -d -c cn.z023.plugs.FlinkSqlPlugKt --target kubernetes-session -Dkubernetes.cluster-id=$containerId /data/flink/jar/sql/dap-plug-k8s.jar"
+    }
+
+    fun runK8sJarCommand(
+        mainClass: String,
+        containerId: String,
+        jarName: String,
+        params: String?,
+        fv: String
+    ): String {
+        return "/usr/local/lib/$fv/bin/flink run -d -c $mainClass --target kubernetes-session -Dkubernetes.cluster-id=$containerId /data/flink/jar/jobs/$jarName ${params?:""}"
+    }
+
+    fun runK8sJarCommand(
+        mainClass: String,
+        containerId: String,
+        jarName: String,
+        params: String?,
+        savepointpath: String,
+        fv: String
+    ): String {
+        return "/usr/local/lib/$fv/bin/flink run -d -c $mainClass -s $savepointpath --allowNonRestoredState --target kubernetes-session -Dkubernetes.cluster-id=$containerId /data/flink/jar/jobs/$jarName ${params?:""}"
+    }
 }

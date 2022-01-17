@@ -27,3 +27,7 @@ daphost:
   port: ${DAPHOST_PORT}
   user: ${DAPHOST_USER}
   password: ${DAPHOST_PASSWORD}
+
+# ~/.kube/config 文件内容
+kube:
+  config: ${KUBE_CONFIG:""}
