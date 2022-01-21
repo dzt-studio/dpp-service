@@ -25,7 +25,7 @@
     <sql id="Base_Column_List">
         id
         , job_name, job_status, start_time, run_time, container_id, last_check_point_address,
-    describes, enable_schedule, job_type, jar_name, app_params, main_class, fv, created_by, 
+    describes, enable_schedule, job_type, jar_name, app_params, main_class, fv, created_by,
     created_at, updated_by, updated_at,app_id
     </sql>
     <select id="selectByPrimaryKey" parameterType="java.lang.String" resultMap="BaseResultMap">
@@ -364,6 +364,15 @@
             </if>
         </where>
         order by start_time desc
+    </select>
+    <select id="getWarningJobInfo" parameterType="java.lang.String" resultType="dzt.studio.dppservice.domain.job.JobParams">
+        select
+            djl.job_type AS jobType,djc.warning_config ->>'warnType' as warnType,
+            djc.warning_config ->>'warnTo' as warnTo
+        from dpp_job_list djl
+            LEFT JOIN dpp_job_config djc
+        on djl.id = djc.job_id
+        where djc.warning_enable AND djl.job_name=#{jobName,jdbcType=VARCHAR}
     </select>
     <select id="getJobInfo" parameterType="java.lang.String" resultType="dzt.studio.dppservice.domain.job.JobParams">
         SELECT djl.id                       as jobId,

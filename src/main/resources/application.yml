@@ -2,7 +2,7 @@ server:
   port: 8083
 spring:
   datasource:
-    url: ${JDBC_URL}
+    url: ${JDBC_URL:jdbc:postgresql://192.168.103.113:5432/dpp?user=postgres&password=Qbkj@2020&useUnicode=true&characterEncoding=utf-8&useSSL=true}
     driver-class-name: org.postgresql.Driver
   servlet:
     multipart:
@@ -31,3 +31,11 @@ daphost:
 # ~/.kube/config 文件内容
 kube:
   config: ${KUBE_CONFIG:}
+# 项目环境名
+env:
+  name: ${ENV_NAME:TEST}
+# 发送邮件的邮箱
+mail:
+  host: ${MAIL_HOST}
+  password: ${MAIL_PASSWORD}
+  from: ${MAIL_FROM}

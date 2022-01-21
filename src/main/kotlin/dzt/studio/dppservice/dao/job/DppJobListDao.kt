@@ -12,4 +12,5 @@ interface DppJobListDao : MyBatisBaseDao<DppJobList, String> {
     fun selectByJobName(jobName:String):DppJobList?
     fun getAppContainerInfo(appId:String):String
     fun selectByParams(params: FilterParams):List<DppJobList>
+    fun getWarningJobInfo(jobName: String): JobParams?
 }

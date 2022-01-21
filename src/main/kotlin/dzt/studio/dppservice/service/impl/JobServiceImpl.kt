@@ -113,6 +113,18 @@ class JobServiceImpl : JobService {
             dppJobConfig.tm = params.tm
             dppJobConfig.ys = params.ys
         }
+        if (params.enableWarning) {
+            dppJobConfig.warningEnable = params.enableWarning
+            val warnTo = if (params.warnType == "钉钉") {
+                params.dingTokenId
+            } else {
+                params.emailAdd
+            }
+            dppJobConfig.warningConfig = WarningConfig(
+                warnType = params.warnType,
+                warnTo = warnTo
+            )
+        }
         return try {
             dppJobListDAO!!.upsert(dppJobList)
             dppJobConfigDao!!.upsert(dppJobConfig)
