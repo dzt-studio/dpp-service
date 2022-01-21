@@ -64,6 +64,8 @@ class JobServiceImpl : JobService {
     private val KUBE_CONFIG: String? = null
 
     final var threadpool: ThreadPoolExecutor? = null
+    final val decoder = Base64.getDecoder()
+    final val encoder = Base64.getEncoder()
 
     val logger = LoggerFactory.getLogger(this.javaClass)
 
@@ -122,6 +124,9 @@ class JobServiceImpl : JobService {
 
     override fun getJobInfo(jobName: String): JobParams? {
         val jobParams = dppJobListDAO?.getJobInfo(jobName)
+        if (jobParams?.flinkSql != null) {
+            jobParams.flinkSql = encoder.encodeToString(jobParams.flinkSql!!.encodeToByteArray())
+        }
         if (jobParams!!.enableWarning) {
             when (jobParams.warnType) {
                 "钉钉" -> {
@@ -151,7 +156,7 @@ class JobServiceImpl : JobService {
         val planner = p.planner
         val parser = planner!!.parser
         var r = ""
-        val psql = sqls.split(";")
+        val psql = String(decoder.decode(sqls)).split(";")
         psql.forEach {
             try {
                 val operations = parser!!.parse(it)
@@ -646,7 +651,7 @@ class JobServiceImpl : JobService {
         }
         dppJobConfig.restartStrategyCount = params.restartStrategyCount
         dppJobConfig.restartStrategyTime = params.restartStrategyTime
-        dppJobConfig.sqlDetails = params.flinkSql
+        dppJobConfig.sqlDetails = String(decoder.decode(params.flinkSql))
         dppJobConfig.jobId = dppJobList.id
         dppJobConfig.containerType = params.containerType
         if (params.containerType == 2) {
