@@ -120,8 +120,7 @@ class FlinkJobsSchedules {
         }
     }
 
-    //@Scheduled(cron = "0 0/30 * * * ?")
-    @Scheduled(cron = "0/15 * * * * ?")
+    @Scheduled(cron = "0 0/30 * * * ?")
     fun jobMonitor() {
 
         if (failJobQueue.isNotEmpty()) {
