@@ -99,13 +99,13 @@ class JobController {
     }
 
     @PostMapping("/jar-upload")
-    fun jarUpload(@RequestParam file: MultipartFile): JSONResult<Any> {
-        return JSONResult(HttpCode.OK.code, "操作成功", jobService?.jarUpload(file))
+    fun jarUpload(@RequestParam(value = "file") file: MultipartFile, @RequestParam(value = "ctype") ctype: String): JSONResult<Any> {
+        return JSONResult(HttpCode.OK.code, "操作成功", jobService?.jarUpload(file, ctype))
     }
 
     @GetMapping("/app-jar-list")
-    fun appJarList(): JSONResult<Any> {
-        return JSONResult(HttpCode.OK.code, "操作成功", jobService?.getAppJarList())
+    fun appJarList(@RequestParam(value = "ctype") ctype: String): JSONResult<Any> {
+        return JSONResult(HttpCode.OK.code, "操作成功", jobService?.getAppJarList(ctype))
     }
 
     @GetMapping("/app-container-info")

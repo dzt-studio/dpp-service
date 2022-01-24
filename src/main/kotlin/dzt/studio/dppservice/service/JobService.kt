@@ -41,9 +41,9 @@ interface JobService {
 
     fun jobLog(jobId:String):String?
 
-    fun getAppJarList():List<DppAppJars>?
+    fun getAppJarList(ctype: String):List<DppAppJars>?
 
-    fun jarUpload(file: MultipartFile):Boolean
+    fun jarUpload(file: MultipartFile, ctype: String):Boolean
 
     fun jobCommitWithJar(jobName: String):Boolean
 

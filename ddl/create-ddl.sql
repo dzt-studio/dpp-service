@@ -195,4 +195,6 @@ alter table dpp_job_config add column warning_config jsonb;
 comment on column dpp_job_config.warning_config is  '报警配置';
 
 alter table dpp_container_info add column c_type text;
-comment on column dpp_container_info.c_type is  '容器类型(yarn，docker)';
+comment on column dpp_container_info.c_type is  '容器类型(yarn，docker，k8s)';
+
+ALTER TABLE public.dpp_app_jars ADD ctype text NOT NULL;

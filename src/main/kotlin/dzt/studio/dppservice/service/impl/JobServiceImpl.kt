@@ -60,9 +60,6 @@ class JobServiceImpl : JobService {
     @Resource
     var tokenUtils: TokenUtils? = null
 
-    @Value("\${kube.config}")
-    private val KUBE_CONFIG: String? = null
-
     final var threadpool: ThreadPoolExecutor? = null
     final val decoder = Base64.getDecoder()
     final val encoder = Base64.getEncoder()
@@ -139,7 +136,7 @@ class JobServiceImpl : JobService {
         if (jobParams?.flinkSql != null) {
             jobParams.flinkSql = encoder.encodeToString(jobParams.flinkSql!!.encodeToByteArray())
         }
-        if (jobParams!!.enableWarning) {
+        if (jobParams?.enableWarning == true) {
             when (jobParams.warnType) {
                 "钉钉" -> {
                     jobParams.dingTokenId = jobParams.warnTo
@@ -391,12 +388,12 @@ class JobServiceImpl : JobService {
         return dppJobLogDao?.selectByPrimaryKey(jobId)?.logInfo
     }
 
-    override fun getAppJarList(): List<DppAppJars>? {
-        return dppAppJarsDao?.selectAll()
+    override fun getAppJarList(ctype: String): List<DppAppJars>? {
+        return dppAppJarsDao?.selectAll(ctype)
     }
 
-    override fun jarUpload(file: MultipartFile): Boolean {
-        val isload = if (KUBE_CONFIG.isNullOrBlank()) {
+    override fun jarUpload(file: MultipartFile, ctype: String): Boolean {
+        val isload = if (ctype != "k8s") {
             val sf = XftpClientUtils()
             val sftp: ChannelSftp = sf.connect(osEntity!!.host!!, osEntity!!.port, osEntity!!.user, osEntity!!.password)!!
             sf.upload("/data/flink/jar/jobs/", file, sftp)

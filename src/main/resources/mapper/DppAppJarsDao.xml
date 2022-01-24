@@ -4,14 +4,15 @@
   <resultMap id="BaseResultMap" type="dzt.studio.dppservice.domain.job.DppAppJars">
     <id column="id" jdbcType="VARCHAR" property="id" />
     <result column="jar_name" jdbcType="VARCHAR" property="jarName" />
+    <result column="ctype" jdbcType="VARCHAR" property="ctype" />
     <result column="created_at" jdbcType="TIMESTAMP" property="createdAt" />
     <result column="updated_at" jdbcType="TIMESTAMP" property="updatedAt" />
   </resultMap>
   <sql id="Base_Column_List">
-    id, jar_name, created_at, updated_at
+    id, jar_name, ctype, created_at, updated_at
   </sql>
   <select id="selectByPrimaryKey" parameterType="java.lang.String" resultMap="BaseResultMap">
-    select 
+    select
     <include refid="Base_Column_List" />
     from "dpp_app_jars"
     where id = #{id,jdbcType=VARCHAR}
@@ -78,6 +79,7 @@
     select
     <include refid="Base_Column_List"/>
     from "dpp_app_jars"
+    WHERE ctype = #{ctype,jdbcType=VARCHAR}
   </select>
   <select id="getInfo" parameterType="java.lang.String" resultMap="BaseResultMap">
     select

@@ -7,4 +7,5 @@ import org.springframework.stereotype.Repository
 @Repository
 interface DppAppJarsDao : MyBatisBaseDao<DppAppJars, String> {
     fun getInfo(jarName:String):DppAppJars?
+    fun selectAll(ctype: String):List<DppAppJars>
 }

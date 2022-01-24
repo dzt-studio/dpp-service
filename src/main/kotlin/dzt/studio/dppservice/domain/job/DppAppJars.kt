@@ -14,6 +14,8 @@ class DppAppJars(
 
     var jarName: String? = null,
 
+    var ctype: String? = null,
+
     var createdAt: Date? = null,
 
     var updatedAt: Date? = null,
