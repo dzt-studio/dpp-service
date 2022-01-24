@@ -283,6 +283,7 @@ class JobServiceImpl : JobService {
                             dppContainerInfo.containerType = 2
                             dppContainerInfo.containerUrl = "http://$webUI"
                             dppContainerInfo.containerVersion = config.fv
+                            dppContainerInfo.ctype = "yarn"
                             dppContainerInfo.jm = config.jm
                             dppContainerInfo.tm = config.tm
                             dppContainerInfoDao?.insert(dppContainerInfo)
@@ -470,6 +471,7 @@ class JobServiceImpl : JobService {
                         dppContainerInfo.containerType = 2
                         dppContainerInfo.containerUrl = "http://$webUI"
                         dppContainerInfo.containerVersion = config.fv
+                        dppContainerInfo.ctype = "yarn"
                         dppContainerInfo.jm = config.jm
                         dppContainerInfo.tm = config.tm
                         dppContainerInfoDao?.insert(dppContainerInfo)
