@@ -16,7 +16,6 @@ import org.apache.flink.table.api.TableException
 import org.apache.flink.table.api.internal.TableEnvironmentImpl
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import org.springframework.web.multipart.MultipartFile
@@ -417,6 +416,7 @@ class JobServiceImpl : JobService {
                 dppAppJars = DppAppJars()
                 dppAppJars.id = UUID.randomUUID().toString()
                 dppAppJars.jarName = file.originalFilename
+                dppAppJars.ctype = ctype
                 dppAppJars.createdAt = Date()
                 dppAppJarsDao!!.insert(dppAppJars)
             } else {
