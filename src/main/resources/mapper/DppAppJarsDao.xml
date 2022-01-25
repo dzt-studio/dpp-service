@@ -4,12 +4,12 @@
   <resultMap id="BaseResultMap" type="dzt.studio.dppservice.domain.job.DppAppJars">
     <id column="id" jdbcType="VARCHAR" property="id" />
     <result column="jar_name" jdbcType="VARCHAR" property="jarName" />
-    <result column="ctype" jdbcType="VARCHAR" property="ctype" />
+    <result column="c_type" jdbcType="VARCHAR" property="ctype" />
     <result column="created_at" jdbcType="TIMESTAMP" property="createdAt" />
     <result column="updated_at" jdbcType="TIMESTAMP" property="updatedAt" />
   </resultMap>
   <sql id="Base_Column_List">
-    id, jar_name, ctype, created_at, updated_at
+    id, jar_name, c_type, created_at, updated_at
   </sql>
   <select id="selectByPrimaryKey" parameterType="java.lang.String" resultMap="BaseResultMap">
     select
@@ -22,7 +22,7 @@
     where id = #{id,jdbcType=VARCHAR}
   </delete>
   <insert id="insert" keyColumn="id" keyProperty="id" parameterType="dzt.studio.dppservice.domain.job.DppAppJars" useGeneratedKeys="true">
-    insert into "dpp_app_jars" (id,jar_name, ctype, created_at, updated_at
+    insert into "dpp_app_jars" (id,jar_name, c_type, created_at, updated_at
       )
     values (#{id,jdbcType=VARCHAR},#{jarName,jdbcType=VARCHAR}, #{ctype,jdbcType=VARCHAR}, #{createdAt,jdbcType=TIMESTAMP}, #{updatedAt,jdbcType=TIMESTAMP}
       )
@@ -59,7 +59,7 @@
         jar_name = #{jarName,jdbcType=VARCHAR},
       </if>
       <if test="ctype != null">
-        ctype = #{ctype,jdbcType=VARCHAR},
+        c_type = #{ctype,jdbcType=VARCHAR},
       </if>
       <if test="createdAt != null">
         created_at = #{createdAt,jdbcType=TIMESTAMP},
@@ -81,8 +81,7 @@
   <select id="selectAll" parameterType="java.lang.String" resultMap="BaseResultMap">
     select
     <include refid="Base_Column_List"/>
-    from "dpp_app_jars"
-    WHERE ctype = #{ctype,jdbcType=VARCHAR}
+    from "dpp_app_jars" WHERE c_type = #{ctype,jdbcType=VARCHAR}
   </select>
   <select id="getInfo" parameterType="java.lang.String" resultMap="BaseResultMap">
     select
