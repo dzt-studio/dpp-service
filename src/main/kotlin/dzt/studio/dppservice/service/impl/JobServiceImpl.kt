@@ -421,6 +421,7 @@ class JobServiceImpl : JobService {
                 dppAppJarsDao!!.insert(dppAppJars)
             } else {
                 dppAppJars.updatedAt = Date()
+                dppAppJars.ctype = ctype
                 dppAppJarsDao?.updateByPrimaryKeySelective(dppAppJars)
             }
         }
