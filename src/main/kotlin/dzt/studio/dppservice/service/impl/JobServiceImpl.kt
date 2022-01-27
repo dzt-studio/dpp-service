@@ -661,7 +661,9 @@ class JobServiceImpl : JobService {
         }
         dppJobConfig.restartStrategyCount = params.restartStrategyCount
         dppJobConfig.restartStrategyTime = params.restartStrategyTime
-        dppJobConfig.sqlDetails = String(decoder.decode(params.flinkSql))
+        if (params.flinkSql != null) {
+            dppJobConfig.sqlDetails = String(decoder.decode(params.flinkSql))
+        }
         dppJobConfig.jobId = dppJobList.id
         dppJobConfig.containerType = params.containerType
         if (params.containerType == 2) {
