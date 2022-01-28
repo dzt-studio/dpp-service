@@ -53,7 +53,7 @@ class FlinkJobsSchedules {
     @Value("\${env.name}")
     private val ENV_NAME: String? = null
 
-    final var failJobQueue: LinkedBlockingQueue<String?>
+    final var failJobQueue: LinkedBlockingQueue<String>
 
     init {
         failJobQueue = LinkedBlockingQueue(10)
@@ -76,7 +76,9 @@ class FlinkJobsSchedules {
                 if (it.warningEnable && it.jobStatus == JobStatus.RUNNING.toString() &&
                     (jobCurrentStatus.state == JobStatus.FAILED.toString() || jobCurrentStatus.state == JobStatus.FINISHED.toString())
                 ) {
-                    failJobQueue.put(it.jobName)
+                    if (it.jobName != null) {
+                        failJobQueue.put(it.jobName!!)
+                    }
                 }
                 val jobCheckPoint = JSON.parseObject(JSON.toJSONString(rc), JobCheckPoint::class.java)
                 if (!(it.jobStatus == "BUILDING" && jobCurrentStatus.state == "CANCELED")) {
@@ -133,20 +135,22 @@ class FlinkJobsSchedules {
              *  先尝试重启一次
              */
             while (failJobQueue.isNotEmpty()) {
-                val poll = failJobQueue.poll()
-                if (poll != null) {
-                    val jobParams = dppJobListDAO!!.getWarningJobInfo(poll)
+                val failJobName = failJobQueue.poll()
+                val jobStatus = dppJobListDAO!!.selectByJobName(failJobName)?.jobStatus
+                // jobStatus==RUNNING说明已经被手动重启，应该过滤掉
+                if (jobStatus == JobStatus.FAILED.toString() || jobStatus == JobStatus.FINISHED.toString()) {
+                    val jobParams = dppJobListDAO!!.getWarningJobInfo(failJobName)
                     when (jobParams?.jobType) {
                         "Flink Sql" ->
-                            jobService!!.jobCommit(poll)
+                            jobService!!.jobCommit(failJobName)
                         "Flink Jar" ->
-                            jobService!!.jobCommitWithJar(poll)
+                            jobService!!.jobCommitWithJar(failJobName)
                     }
                     val buildKey = "${jobParams?.warnType}#${jobParams?.warnTo}"
                     if (failJobNameMap.containsKey(buildKey)) {
-                        failJobNameMap[buildKey]!!.plus(poll)
+                        failJobNameMap[buildKey]!!.plus(failJobName)
                     } else {
-                        failJobNameMap[buildKey] = mutableListOf<String>().plus(poll)
+                        failJobNameMap[buildKey] = mutableListOf<String>().plus(failJobName)
                     }
                 }
             }
