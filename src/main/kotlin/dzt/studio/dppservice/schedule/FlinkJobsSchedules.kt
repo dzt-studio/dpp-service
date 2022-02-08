@@ -148,7 +148,7 @@ class FlinkJobsSchedules {
                     }
                     val buildKey = "${jobParams?.warnType}#${jobParams?.warnTo}"
                     if (failJobNameMap.containsKey(buildKey)) {
-                        failJobNameMap[buildKey]!!.plus(failJobName)
+                        failJobNameMap[buildKey] = failJobNameMap[buildKey]!!.plus(failJobName)
                     } else {
                         failJobNameMap[buildKey] = mutableListOf<String>().plus(failJobName)
                     }
