@@ -65,8 +65,8 @@ class JobController {
     }
 
     @GetMapping("/commit")
-    fun jobCommit(@RequestParam(value = "jobName") jobName: String): JSONResult<Any> {
-        return if (jobService?.jobCommit(jobName) == true) {
+    fun jobCommit(@RequestParam(value = "jobName") jobName: String,@RequestParam(value = "startType") startType: Int): JSONResult<Any> {
+        return if (jobService?.jobCommit(jobName,startType) == true) {
             JSONResult(HttpCode.OK.code, "操作成功")
         } else {
             JSONResult(HttpCode.OK.code, "操作失败")
@@ -74,8 +74,8 @@ class JobController {
     }
 
     @GetMapping("/job-commit-with-jar")
-    fun jobCommitWithJar(@RequestParam(value = "jobName") jobName: String): JSONResult<Any> {
-        return if (jobService?.jobCommitWithJar(jobName) == true) {
+    fun jobCommitWithJar(@RequestParam(value = "jobName") jobName: String,@RequestParam(value = "startType") startType: Int): JSONResult<Any> {
+        return if (jobService?.jobCommitWithJar(jobName,startType) == true) {
             JSONResult(HttpCode.OK.code, "操作成功")
         } else {
             JSONResult(HttpCode.OK.code, "操作失败")

@@ -12,7 +12,7 @@ mybatis:
   type-aliases-package: dzt.studio.dppservice.domain
   mapper-locations: classpath:/mapper/*.xml
 jwt:
-  expiration: 18000000
+  expiration: 3600000
   secret: P@ssw02dC1C
   header: X-Token
   prefix:

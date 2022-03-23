@@ -165,7 +165,7 @@ class JobServiceImpl : JobService {
         return r
     }
 
-    override fun jobCommit(jobName: String): Boolean {
+    override fun jobCommit(jobName: String,startType:Int): Boolean {
         return try {
             val config = dppJobListDAO?.getJobInfo(jobName)
             config?.flinkSql = replaceAllBlank(config?.flinkSql)
@@ -180,7 +180,7 @@ class JobServiceImpl : JobService {
                     var command = ""
                     when (config.ctype) {
                         "yarn" -> {
-                            command = if (!config.lastCheckPointAddress.isNullOrBlank()) {
+                            command = if (!config.lastCheckPointAddress.isNullOrBlank()&&startType!=1) {
                                 CommandUtils.runCommand(
                                     config.fv!!,
                                     config.containerId!!,
@@ -191,7 +191,7 @@ class JobServiceImpl : JobService {
                             }
                         }
                         "docker" -> {
-                            command = if (!config.lastCheckPointAddress.isNullOrBlank()) {
+                            command = if (!config.lastCheckPointAddress.isNullOrBlank()&&startType!=1) {
                                 CommandUtils.runDockerSqlCommand(
                                     config.fv!!,
                                     config.containerId!!,
@@ -240,7 +240,7 @@ class JobServiceImpl : JobService {
                     }
                 }
                 2 -> {
-                    val command = if (!config.lastCheckPointAddress.isNullOrBlank()) {
+                    val command = if (!config.lastCheckPointAddress.isNullOrBlank()&&startType!=1) {
                         CommandUtils.runPreJobOnYarn(
                             config.fv!!,
                             config.lastCheckPointAddress!!,
@@ -266,7 +266,7 @@ class JobServiceImpl : JobService {
                         val r = sshRegisterEntity?.exec(command)
                         if (r?.contains("Job has been submitted with JobID") == true) {
                             val appId = r.split("Job has been submitted with JobID ")[1].trim()
-                            val yid = r.split("Submitted application ")[1].split(" ")[0].split("\n")[0]
+                            val yid = r.split("Submitting application master ")[1].split(" ")[0].split("\n")[0]
                             val webUI = r.split("Found Web Interface ")[1].split(" ")[0]
                             val dppJobList = DppJobList()
                             dppJobList.id = config.jobId
@@ -362,7 +362,7 @@ class JobServiceImpl : JobService {
         return isload
     }
 
-    override fun jobCommitWithJar(jobName: String): Boolean {
+    override fun jobCommitWithJar(jobName: String,startType: Int): Boolean {
         return try {
             val config = dppJobListDAO?.getJobInfo(jobName)
             var r = java.lang.StringBuilder()
@@ -372,7 +372,7 @@ class JobServiceImpl : JobService {
                     when (config.ctype) {
                         "yarn" -> {
                             if (config.jarName != null) {
-                                command = if (!config.lastCheckPointAddress.isNullOrBlank()) {
+                                command = if (!config.lastCheckPointAddress.isNullOrBlank()&&startType!=1) {
                                     CommandUtils.runWithAppCommand(
                                         config.mainClass!!,
                                         config.containerId!!,
@@ -394,7 +394,7 @@ class JobServiceImpl : JobService {
                         }
                         "docker" -> {
                             if (config.jarName != null) {
-                                command = if (!config.lastCheckPointAddress.isNullOrBlank()) {
+                                command = if (!config.lastCheckPointAddress.isNullOrBlank()&&startType!=1) {
                                     CommandUtils.runDockerJarCommand(
                                         config.mainClass!!,
                                         config.containerId!!,
@@ -416,7 +416,7 @@ class JobServiceImpl : JobService {
                 }
                 2 -> {
                     if (config.jarName != null) {
-                        command = if (!config.lastCheckPointAddress.isNullOrBlank()) {
+                        command = if (!config.lastCheckPointAddress.isNullOrBlank()&&startType!=1) {
                             CommandUtils.runPreJobWithApp(
                                 config.mainClass!!,
                                 config.jarName!!,
@@ -462,7 +462,7 @@ class JobServiceImpl : JobService {
                         dppJobList.containerId = config.containerId
                     }
                     if (config?.containerType == 2) {
-                        val yid = r.split("Submitted application ")[1].split(" ")[0].split("\n")[0]
+                        val yid = r.split("Submitting application master ")[1].split(" ")[0].split("\n")[0]
                         val webUI = r.split("Found Web Interface ")[1].split(" ")[0]
                         dppJobList.containerId = yid
                         val dppContainerInfo = DppContainerInfo()

@@ -100,14 +100,7 @@ object TokenAuthenticationService {
                     null
                 }
             } catch (e: Exception) {
-                response.status = HttpServletResponse.SC_UNAUTHORIZED
-                response.contentType = "application/json;charset=UTF-8"
-                val out = response.writer
-
-                val res = JSONResult(5, "token失效", e.message)
-                out.write(ObjectMapper().writeValueAsString(res))
-                out.flush()
-                out.close()
+                return null
             }
         }
         return null

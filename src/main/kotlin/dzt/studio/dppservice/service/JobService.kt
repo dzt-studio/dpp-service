@@ -35,7 +35,7 @@ interface JobService {
      */
     fun sqlVerify(sqls:String):String
 
-    fun jobCommit(jobName: String):Boolean
+    fun jobCommit(jobName: String,startType:Int):Boolean
 
     fun jobStop(jobId:String):Boolean
 
@@ -45,7 +45,7 @@ interface JobService {
 
     fun jarUpload(file: MultipartFile):Boolean
 
-    fun jobCommitWithJar(jobName: String):Boolean
+    fun jobCommitWithJar(jobName: String,startType:Int):Boolean
 
     fun getAppContainerInfo(appId:String):String
 
