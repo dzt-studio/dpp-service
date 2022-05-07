@@ -351,6 +351,13 @@
         from "dpp_job_list"
         order by start_time desc
     </select>
+    <select id="getFailedJobs" resultType="java.lang.String">
+        SELECT job_name
+        FROM dpp_job_list djl
+                 LEFT JOIN dpp_job_config djc ON djl.id = djc.job_id
+        WHERE djc.warning_enable = TRUE
+          AND djl.job_status IN ('FAILED', 'FINISHED')
+    </select>
     <select id="selectByParams" parameterType="dzt.studio.dppservice.domain.job.FilterParams" resultMap="BaseResultMap">
         select
         <include refid="Base_Column_List"/>
