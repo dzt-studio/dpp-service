@@ -21,7 +21,7 @@
     from "dpp_job_scheduled"
   </select>
   <select id="selectByPrimaryKey" parameterType="java.lang.String" resultMap="BaseResultMap">
-    select 
+    select
     <include refid="Base_Column_List" />
     from "dpp_job_scheduled"
     where id = #{id,jdbcType=VARCHAR}
@@ -32,10 +32,10 @@
   </delete>
   <insert id="insert" keyColumn="id" keyProperty="id" parameterType="dzt.studio.dppservice.domain.job.DppJobScheduled" useGeneratedKeys="true">
     insert into "dpp_job_scheduled" (id,job_name, cron, created_by,
-      created_at, updated_by, updated_at, 
+      created_at, updated_by, updated_at,
       is_open,job_type)
     values (#{id,jdbcType=VARCHAR},#{jobName,jdbcType=VARCHAR}, #{cron,jdbcType=VARCHAR}, #{createdBy,jdbcType=VARCHAR},
-      #{createdAt,jdbcType=TIMESTAMP}, #{updatedBy,jdbcType=VARCHAR}, #{updatedAt,jdbcType=TIMESTAMP}, 
+      #{createdAt,jdbcType=TIMESTAMP}, #{updatedBy,jdbcType=VARCHAR}, #{updatedAt,jdbcType=TIMESTAMP},
       #{isOpen,jdbcType=BOOLEAN},#{jobType,jdbcType=VARCHAR})
   </insert>
   <insert id="insertSelective" keyColumn="id" keyProperty="id" parameterType="dzt.studio.dppservice.domain.job.DppJobScheduled" useGeneratedKeys="true">
@@ -144,5 +144,10 @@
       enable_schedule = TRUE
       AND job_name NOT IN ( SELECT job_name FROM dpp_job_scheduled )
   </select>
-
+  <select id="getOpeningJob" resultMap="BaseResultMap">
+    select
+    <include refid="Base_Column_List" />
+    from "dpp_job_scheduled"
+    where is_open = TRUE
+  </select>
 </mapper>

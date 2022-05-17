@@ -85,7 +85,7 @@ class JobController {
 
     @GetMapping("/stop")
     fun jobStop(@RequestParam(value = "jobId") jobId: String): JSONResult<Any> {
-        return if (jobService?.jobStop(jobId) == true) {
+        return if (jobService?.jobStop(jobId, null) == true) {
             JSONResult(HttpCode.OK.code, "操作成功")
         } else {
             JSONResult(HttpCode.OK.code, "操作失败")

@@ -53,6 +53,8 @@ class TaskContainer {
         taskListDto.cron=dppJobScheduled.cron
         taskListDto.jobId = dppJobScheduled.jobName
         val future = threadPoolTaskScheduler!!.schedule(Runnable {
+            this.jobService!!.jobStop(null, dppJobScheduled.jobName!!)
+
             when(dppJobScheduled.jobType){
                 "Flink Sql" ->
                     dppJobScheduled.jobName?.let { this.jobService!!.jobCommit(it) }

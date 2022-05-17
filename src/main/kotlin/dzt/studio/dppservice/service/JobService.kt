@@ -37,7 +37,7 @@ interface JobService {
 
     fun jobCommit(jobName: String):Boolean
 
-    fun jobStop(jobId:String):Boolean
+    fun jobStop(jobId: String?, jobName: String?):Boolean
 
     fun jobLog(jobId:String):String?
 

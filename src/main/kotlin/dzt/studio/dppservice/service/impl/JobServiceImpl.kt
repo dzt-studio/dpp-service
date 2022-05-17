@@ -1,6 +1,5 @@
 package dzt.studio.dppservice.service.impl
 
-import akka.util.Switch
 import com.alibaba.fastjson.JSON
 import com.github.pagehelper.PageHelper
 import com.github.pagehelper.PageInfo
@@ -78,6 +77,7 @@ class JobServiceImpl : JobService {
             saveJob(params)
             true
         } catch (e: Exception) {
+            e.printStackTrace()
             false
         }
     }
@@ -347,8 +347,15 @@ class JobServiceImpl : JobService {
         }
     }
 
-    override fun jobStop(jobId: String): Boolean {
-        val jobInfo = dppJobListDAO?.selectByPrimaryKey(jobId)
+    override fun jobStop(jobId: String?, jobName: String?): Boolean {
+        val jobInfo = if (jobId != null) {
+            dppJobListDAO?.selectByPrimaryKey(jobId)
+        } else if (jobName != null) {
+            dppJobListDAO?.selectByJobName(jobName)
+        } else {
+            logger.error("jobStop error -----------> 根据job_id或job_name查不到job信息")
+            return false
+        }
         val jobConfig = dppJobListDAO?.getJobInfo(jobInfo?.jobName!!)
         val containerType = jobConfig!!.containerType
         val ctype = jobConfig.ctype

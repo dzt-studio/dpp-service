@@ -49,6 +49,8 @@ class CronServiceImpl : CronService {
     override fun updateCron(dppJobScheduled: DppJobScheduled): Boolean {
         return try {
             dppJobScheduledDao?.updateByPrimaryKeySelective(dppJobScheduled)
+            mapContainer.cancelMap(dppJobScheduled.id)
+            mapContainer.putMap(dppJobScheduled)
             true
         } catch (e: Exception) {
             false
